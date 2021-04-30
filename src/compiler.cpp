@@ -1,7 +1,7 @@
 #include <string>
 #include <sstream>
 
-#include "bf.h"
+#include "compiler.h"
 
 std::string bf::compile_asm(const char *source, size_t size)
 {
