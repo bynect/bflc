@@ -4,12 +4,15 @@
 std::string compile_asm(const char *source, size_t size)
 {
     auto buf = std::stringstream();
+    int label = 0;
 
+    buf << "	# cell begin\n";
     buf << "	.data\n";
     buf << "cells:\n";
-    buf << "	.space 3000, 0\n";
+    buf << "	.space 30000, 0\n";
     buf << "cellptr:\n";
     buf << "	.quad cells\n";
+    buf << "	# cell end\n";
     buf << "\n";
 
     buf << "	.text\n";
@@ -25,38 +28,99 @@ std::string compile_asm(const char *source, size_t size)
         switch (source[i])
         {
             case '>':
-                buf << "	addq $1, cellptr(%rip)\n";
+                buf << "	# > begin\n";
+
+                buf << "	movq cellptr(%rip), %rax\n";
+                buf << "	addq $1, %rax\n";
+                buf << "	movq %rax, cellptr(%rip)\n";
+
+                buf << "	# > end\n";
                 break;
 
             case '<':
-                buf << "	subq $-1, cellptr(%rip)\n";
+                buf << "	# < begin\n";
+
+                buf << "	movq cellptr(%rip), %rax\n";
+                buf << "	subq $1, %rax\n";
+                buf << "	movq %rax, cellptr(%rip)\n";
+
+                buf << "	# < end>\n";
                 break;
 
             case '+':
-                buf << "	movq cellptr(%rip), %r11\n";
-                buf << "	addb $1, (%r11)\n";
+                buf << "	# + begin\n";
+
+                buf << "	movq cellptr(%rip), %rax\n";
+                buf << "	movl (%rax), %edx\n";
+                buf << "	addl $1, %edx\n";
+                buf << "	movl %edx, (%rax)\n";
+
+                buf << "	# + end\n";
                 break;
 
             case '-':
-                buf << "	movq cellptr(%rip), %r11\n";
-                buf << "	subb $1, (%r11)\n";
+                buf << "	# - begin\n";
+
+                buf << "	movq cellptr(%rip), %rax\n";
+                buf << "	movl (%rax), %edx\n";
+                buf << "	subl $1, %edx\n";
+                buf << "	movl %edx, (%rax)\n";
+
+                buf << "	# - end\n";
                 break;
 
             case '.':
-                buf << "	movq cellptr(%rip), %rdi\n";
+                buf << "	# . begin\n";
+
+                buf << "	movq cellptr(%rip), %rax\n";
+                buf << "	movl (%rax), %eax\n";
+                buf << "	movsbl %al, %eax\n";
+                buf << "	movl %eax, %edi\n";
                 buf << "	call putchar@PLT\n";
+
+                buf << "	# . end\n";
                 break;
 
             case ',':
+                buf << "	# , begin\n";
+
                 buf << "	call getchar@PLT\n";
-                buf << "	movq %rax, %r10\n";
-                buf << "	movb %r10b, cellptr(%rip)\n";
+                buf << "	movl %eax, %edx\n";
+                buf << "	movq cellptr(%rip), %rax\n";
+                buf << "	movsbl %dl, %edx\n";
+                buf << "	movl %edx, (%rax)\n";
+
+                buf << "	# , end\n";
                 break;
 
+            case '[':
+                buf << "	# [ begin\n";
+
+                buf << "L" << label << ":\n";
+                label++;
+
+                buf << "	movq cellptr(%rip), %rax\n";
+                buf << "	movb (%rax), %al\n";
+                buf << "	testb %al, %al\n";
+                buf << "	je L" << label << "\n";
+
+                buf << "	# [ end\n";
+                break;
+
+            case ']':
+                buf << "	# ] begin\n";
+
+                buf << "	jmp L" << (label - 1) << "\n";
+                buf << "L" << label << ":\n";
+                label++;
+
+                buf << "	# ] end\n";
+                break;
         }
     }
 
     buf << "\n";
+    buf << "	movl $0, %eax\n";
     buf << "	popq %rbp\n";
     buf << "	ret\n";
 
@@ -67,5 +131,30 @@ std::string compile_asm(const char *source, size_t size)
 
 int main()
 {
-    std::cout << compile_asm(",.", 2) << std::endl;
+    const char source[] = "\
+        +++++ +++++\
+        [\
+            > +++++ ++\
+            > +++++ +++++\
+            > +++\
+            > +\
+            <<<< -\
+        ]\
+        > ++ .\
+        > + .\
+        +++++ ++ .\
+        .\
+        +++ .\
+        > ++ .\
+        << +++++ +++++ +++++ .\
+        > .\
+        +++ .\
+        ----- - .\
+        ----- --- .\
+        > + .\
+        > .\
+        \
+    ";
+
+    std::cout << compile_asm(source, sizeof(source) - 1) << std::endl;
 }
