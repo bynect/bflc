@@ -4,135 +4,141 @@
 
 #include "compiler.h"
 
-std::string bf::compile_asm(const char *source, size_t size)
+static std::string
+compile_asm_internal(std::stringstream& buffer, const char *source, size_t size)
 {
-    auto buf = std::stringstream();
     uint32_t label = 0, label2 = 0;
     std::vector<uint32_t> labels;
 
-    buf << "	# cell begin\n";
-    buf << "	.data\n";
-    buf << "cells:\n";
-    buf << "	.space 30000, 0\n";
-    buf << "cellptr:\n";
-    buf << "	.quad cells\n";
-    buf << "	# cell end\n";
-    buf << "\n";
+    buffer << "	# cell begin\n";
+    buffer << "	.data\n";
+    buffer << "cells:\n";
+    buffer << "	.space 30000, 0\n";
+    buffer << "cellptr:\n";
+    buffer << "	.quad cells\n";
+    buffer << "	# cell end\n";
+    buffer << "\n";
 
-    buf << "	.text\n";
-    buf << "	.globl main\n";
-    buf << "	.type main, @function\n";
-    buf << "main:\n";
-    buf << "	pushq %rbp\n";
-    buf << "	movq %rsp, %rbp\n";
-    buf << "\n";
+    buffer << "	.text\n";
+    buffer << "	.globl main\n";
+    buffer << "	.type main, @function\n";
+    buffer << "main:\n";
+    buffer << "	pushq %rbp\n";
+    buffer << "	movq %rsp, %rbp\n";
+    buffer << "\n";
 
     for (size_t i = 0; i < size; ++i)
     {
         switch (source[i])
         {
             case '>':
-                buf << "	# > begin\n";
+                buffer << "	# > begin\n";
 
-                buf << "	movq cellptr(%rip), %rax\n";
-                buf << "	addq $1, %rax\n";
-                buf << "	movq %rax, cellptr(%rip)\n";
+                buffer << "	movq cellptr(%rip), %rax\n";
+                buffer << "	addq $1, %rax\n";
+                buffer << "	movq %rax, cellptr(%rip)\n";
 
-                buf << "	# > end\n";
+                buffer << "	# > end\n";
                 break;
 
             case '<':
-                buf << "	# < begin\n";
+                buffer << "	# < begin\n";
 
-                buf << "	movq cellptr(%rip), %rax\n";
-                buf << "	subq $1, %rax\n";
-                buf << "	movq %rax, cellptr(%rip)\n";
+                buffer << "	movq cellptr(%rip), %rax\n";
+                buffer << "	subq $1, %rax\n";
+                buffer << "	movq %rax, cellptr(%rip)\n";
 
-                buf << "	# < end>\n";
+                buffer << "	# < end>\n";
                 break;
 
             case '+':
-                buf << "	# + begin\n";
+                buffer << "	# + begin\n";
 
-                buf << "	movq cellptr(%rip), %rax\n";
-                buf << "	movl (%rax), %edx\n";
-                buf << "	addl $1, %edx\n";
-                buf << "	movl %edx, (%rax)\n";
+                buffer << "	movq cellptr(%rip), %rax\n";
+                buffer << "	movl (%rax), %edx\n";
+                buffer << "	addl $1, %edx\n";
+                buffer << "	movl %edx, (%rax)\n";
 
-                buf << "	# + end\n";
+                buffer << "	# + end\n";
                 break;
 
             case '-':
-                buf << "	# - begin\n";
+                buffer << "	# - begin\n";
 
-                buf << "	movq cellptr(%rip), %rax\n";
-                buf << "	movl (%rax), %edx\n";
-                buf << "	subl $1, %edx\n";
-                buf << "	movl %edx, (%rax)\n";
+                buffer << "	movq cellptr(%rip), %rax\n";
+                buffer << "	movl (%rax), %edx\n";
+                buffer << "	subl $1, %edx\n";
+                buffer << "	movl %edx, (%rax)\n";
 
-                buf << "	# - end\n";
+                buffer << "	# - end\n";
                 break;
 
             case '.':
-                buf << "	# . begin\n";
+                buffer << "	# . begin\n";
 
-                buf << "	movq cellptr(%rip), %rax\n";
-                buf << "	movl (%rax), %eax\n";
-                buf << "	movsbl %al, %eax\n";
-                buf << "	movl %eax, %edi\n";
-                buf << "	call putchar@PLT\n";
+                buffer << "	movq cellptr(%rip), %rax\n";
+                buffer << "	movl (%rax), %eax\n";
+                buffer << "	movsbl %al, %eax\n";
+                buffer << "	movl %eax, %edi\n";
+                buffer << "	call putchar@PLT\n";
 
-                buf << "	# . end\n";
+                buffer << "	# . end\n";
                 break;
 
             case ',':
-                buf << "	# , begin\n";
+                buffer << "	# , begin\n";
 
-                buf << "	call getchar@PLT\n";
-                buf << "	movl %eax, %edx\n";
-                buf << "	movq cellptr(%rip), %rax\n";
-                buf << "	movsbl %dl, %edx\n";
-                buf << "	movl %edx, (%rax)\n";
+                buffer << "	call getchar@PLT\n";
+                buffer << "	movl %eax, %edx\n";
+                buffer << "	movq cellptr(%rip), %rax\n";
+                buffer << "	movsbl %dl, %edx\n";
+                buffer << "	movl %edx, (%rax)\n";
 
-                buf << "	# , end\n";
+                buffer << "	# , end\n";
                 break;
 
             case '[':
-                buf << "	# [ begin\n";
+                buffer << "	# [ begin\n";
 
-                buf << "L" << label << ":\n";
+                buffer << "L" << label << ":\n";
                 labels.push_back(label++);
                 labels.push_back(label++);
 
-                buf << "	movq cellptr(%rip), %rax\n";
-                buf << "	movb (%rax), %al\n";
-                buf << "	testb %al, %al\n";
-                buf << "	je L" << (label - 1) << "\n";
+                buffer << "	movq cellptr(%rip), %rax\n";
+                buffer << "	movb (%rax), %al\n";
+                buffer << "	testb %al, %al\n";
+                buffer << "	je L" << (label - 1) << "\n";
 
-                buf << "	# [ end\n";
+                buffer << "	# [ end\n";
                 break;
 
             case ']':
-                buf << "	# ] begin\n";
+                buffer << "	# ] begin\n";
 
                 label2 = labels.back();
                 labels.pop_back();
 
-                buf << "	jmp L" << labels.back() << "\n";
-                buf << "L" << label2 << ":\n";
+                buffer << "	jmp L" << labels.back() << "\n";
+                buffer << "L" << label2 << ":\n";
                 labels.pop_back();
 
-                buf << "	# ] end\n";
+                buffer << "	# ] end\n";
                 break;
         }
     }
 
-    buf << "\n";
-    buf << "	movl $0, %eax\n";
-    buf << "	popq %rbp\n";
-    buf << "	ret\n";
+    buffer << "\n";
+    buffer << "	movl $0, %eax\n";
+    buffer << "	popq %rbp\n";
+    buffer << "	ret\n";
 
-    return buf.str();
+    return buffer.str();
+}
+
+std::string bf::compile_asm(const char *source, size_t size)
+{
+    auto buffer = std::stringstream();
+    return compile_asm_internal(buffer, source, size);
 }
 
 std::string bf::compile_asm(std::string& source)
