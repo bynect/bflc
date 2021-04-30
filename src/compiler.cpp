@@ -145,3 +145,14 @@ std::string bf::compile_asm(std::string& source)
 {
     return bf::compile_asm(source.c_str(), source.size());
 }
+
+
+std::string bf::compile_asm(std::vector<uint8_t> source)
+{
+    return bf::compile_asm((char *)source.data(), source.size());
+}
+
+std::string bf::compile_asm(std::vector<char> source)
+{
+    return bf::compile_asm(source.data(), source.size());
+}
