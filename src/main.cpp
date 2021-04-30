@@ -3,7 +3,7 @@
 #include <streambuf>
 #include <cstring>
 
-#include "src/compiler.h"
+#include "compiler.h"
 
 void usage(char *prog)
 {
