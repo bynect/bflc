@@ -1,12 +1,14 @@
 #include <string>
 #include <sstream>
+#include <vector>
 
 #include "compiler.h"
 
 std::string bf::compile_asm(const char *source, size_t size)
 {
     auto buf = std::stringstream();
-    uint32_t label = 0;
+    uint32_t label = 0, label2 = 0;
+    std::vector<uint32_t> labels;
 
     buf << "	# cell begin\n";
     buf << "	.data\n";
@@ -99,12 +101,13 @@ std::string bf::compile_asm(const char *source, size_t size)
                 buf << "	# [ begin\n";
 
                 buf << "L" << label << ":\n";
-                label++;
+                labels.push_back(label++);
+                labels.push_back(label++);
 
                 buf << "	movq cellptr(%rip), %rax\n";
                 buf << "	movb (%rax), %al\n";
                 buf << "	testb %al, %al\n";
-                buf << "	je L" << label << "\n";
+                buf << "	je L" << (label - 1) << "\n";
 
                 buf << "	# [ end\n";
                 break;
@@ -112,9 +115,12 @@ std::string bf::compile_asm(const char *source, size_t size)
             case ']':
                 buf << "	# ] begin\n";
 
-                buf << "	jmp L" << (label - 1) << "\n";
-                buf << "L" << label << ":\n";
-                label++;
+                label2 = labels.back();
+                labels.pop_back();
+
+                buf << "	jmp L" << labels.back() << "\n";
+                buf << "L" << label2 << ":\n";
+                labels.pop_back();
 
                 buf << "	# ] end\n";
                 break;
