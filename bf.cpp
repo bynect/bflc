@@ -1,10 +1,12 @@
 #include <string>
 #include <sstream>
 
-std::string compile_asm(const char *source, size_t size)
+#include "bf.h"
+
+std::string bf::compile_asm(const char *source, size_t size)
 {
     auto buf = std::stringstream();
-    int label = 0;
+    uint32_t label = 0;
 
     buf << "	# cell begin\n";
     buf << "	.data\n";
@@ -127,34 +129,7 @@ std::string compile_asm(const char *source, size_t size)
     return buf.str();
 }
 
-#include <iostream>
-
-int main()
+std::string bf::compile_asm(std::string& source)
 {
-    const char source[] = "\
-        +++++ +++++\
-        [\
-            > +++++ ++\
-            > +++++ +++++\
-            > +++\
-            > +\
-            <<<< -\
-        ]\
-        > ++ .\
-        > + .\
-        +++++ ++ .\
-        .\
-        +++ .\
-        > ++ .\
-        << +++++ +++++ +++++ .\
-        > .\
-        +++ .\
-        ----- - .\
-        ----- --- .\
-        > + .\
-        > .\
-        \
-    ";
-
-    std::cout << compile_asm(source, sizeof(source) - 1) << std::endl;
+    return bf::compile_asm(source.c_str(), source.size());
 }
