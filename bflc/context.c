@@ -18,7 +18,7 @@ struct context {
 context_t *
 context_new(void)
 {
-    context_t *ctx = realloc(NULL, sizeof(struct context));
+    context_t *ctx = calloc(1, sizeof(struct context));
     return ctx;
 }
 

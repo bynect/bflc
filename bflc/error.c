@@ -13,16 +13,21 @@ error_init(error_t *err, const char *pretty, const instr_t *instr)
 void
 error_node(error_t *err, const char *pretty, const instr_t *instr)
 {
-    error_t *node = malloc(sizeof(error_t));
-    node->pretty = pretty;
-    node->instr = instr;
-    node->next = NULL;
-
-    while (err->next != NULL)
+    if (err->pretty == NULL && err->instr == NULL)
     {
-        err = err->next;
+        error_init(err, pretty, instr);
     }
-    err->next = node;
+    else
+    {
+        error_t *node = malloc(sizeof(error_t));
+        error_init(node, pretty, instr);
+
+        while (err->next != NULL)
+        {
+            err = err->next;
+        }
+        err->next = node;
+    }
 }
 
 void

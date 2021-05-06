@@ -5,6 +5,7 @@
 void
 ir_init(ir_t *ir, size_t min)
 {
+    min *= sizeof(instr_t);
     ir->instrs = malloc(min);
     ir->len = min;
     ir->end = 0;
@@ -13,6 +14,7 @@ ir_init(ir_t *ir, size_t min)
 void
 ir_reset(ir_t *ir, size_t min)
 {
+    min *= sizeof(instr_t);
     if (ir->instrs != NULL)
     {
         if (ir->len < min)
@@ -32,6 +34,7 @@ ir_reset(ir_t *ir, size_t min)
 void
 ir_ensure(ir_t *ir, size_t len)
 {
+    len *= sizeof(instr_t);
     if (ir->len < len)
     {
         ir->len = len + IR_BLOCK;
