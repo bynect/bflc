@@ -14,6 +14,8 @@ typedef struct {
 
 void bytebuffer_init(bytebuffer_t *buf, size_t min);
 
+void bytebuffer_reset(bytebuffer_t *buf, size_t min);
+
 void bytebuffer_write(bytebuffer_t *buf, uint8_t byte);
 
 void bytebuffer_writes(bytebuffer_t *buf, uint8_t *bytes, size_t len);

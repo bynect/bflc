@@ -6,6 +6,14 @@
 void
 bytebuffer_init(bytebuffer_t *buf, size_t min)
 {
+    buf->bytes = malloc(min);
+    buf->len = min;
+    buf->pos = 0;
+}
+
+void
+bytebuffer_reset(bytebuffer_t *buf, size_t min)
+{
     if (buf->bytes != NULL)
     {
         if (buf->len < min)
@@ -19,6 +27,7 @@ bytebuffer_init(bytebuffer_t *buf, size_t min)
 
     buf->bytes = malloc(min);
     buf->len = min;
+    buf->pos = 0;
 }
 
 void
