@@ -16,6 +16,11 @@ typedef struct {
     uint32_t line;
     uint32_t column;
     size_t offset;
+} instr_t;
+
+typedef struct {
+    instr_t *instrs;
+    size_t len;
 } ir_t;
 
 #endif
