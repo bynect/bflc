@@ -7,8 +7,11 @@ struct context {
     bool f_write;
     bool f_open;
     bool f_libc;
+    bool f_wrap;
+    bool f_wrap_ptr;
     bool o_asm;
     bool o_mach;
+    size_t cells;
     void *extra;
 };
 
@@ -42,12 +45,24 @@ context_set(context_t *ctx, uint8_t option, void *value)
             ctx->f_libc = *(bool*)value;
             break;
 
+        case CTX_FWRAP:
+            ctx->f_wrap = *(bool*)value;
+            break;
+
+        case CTX_FWRAPPTR:
+            ctx->f_wrap_ptr = *(bool*)value;
+            break;
+
         case CTX_OASM:
             ctx->o_asm = *(bool*)value;
             break;
 
         case CTX_OMACH:
             ctx->o_mach = *(bool*)value;
+            break;
+
+        case CTX_CELLS:
+            ctx->cells = *(size_t*)value;
             break;
 
         case CTX_EXTRA:
@@ -64,28 +79,39 @@ context_set(context_t *ctx, uint8_t option, void *value)
 bool
 context_get(context_t *ctx, uint8_t option, void **value)
 {
-    bool *ptr = *value;
-
     switch (option)
     {
         case CTX_FWRITE:
-            *ptr = ctx->f_write;
+            *(bool*)*value = ctx->f_write;
             break;
 
         case CTX_FOPEN:
-            *ptr = ctx->f_open;
+            *(bool*)*value = ctx->f_open;
             break;
 
         case CTX_FLIBC:
-            *ptr = ctx->f_libc;
+            *(bool*)*value = ctx->f_libc;
             break;
 
+        case CTX_FWRAP:
+            *(bool*)*value = ctx->f_wrap;
+            break;
+
+        case CTX_FWRAPPTR:
+            *(bool*)*value = ctx->f_wrap_ptr;
+            break;
+
+
         case CTX_OASM:
-            *ptr = ctx->o_asm;
+            *(bool*)*value = ctx->o_asm;
             break;
 
         case CTX_OMACH:
-            *ptr = ctx->o_mach;
+            *(bool*)*value = ctx->o_mach;
+            break;
+
+        case CTX_CELLS:
+            *(size_t*)*value = ctx->cells;
             break;
 
         case CTX_EXTRA:

@@ -7,9 +7,12 @@
 #define CTX_FWRITE 1
 #define CTX_FOPEN 2
 #define CTX_FLIBC 3
-#define CTX_OASM 4
-#define CTX_OMACH 5
-#define CTX_EXTRA 6
+#define CTX_FWRAP 4
+#define CTX_FWRAPPTR 5
+#define CTX_OASM 6
+#define CTX_OMACH 7
+#define CTX_CELLS 8
+#define CTX_EXTRA 9
 
 typedef struct context context_t;
 
