@@ -10,11 +10,14 @@
 #define INSTR_PTRDEC 2
 #define INSTR_CELINC 3
 #define INSTR_CELDEC 4
-#define INSTR_JMPBEG 5
-#define INSTR_JMPEND 6
+#define INSTR_OUTPUT 5
+#define INSTR_INPUT 6
+#define INSTR_JMPBEG 7
+#define INSTR_JMPEND 8
 
 typedef struct {
     uint8_t instr;
+    intptr_t arg;
     uint32_t line;
     uint32_t column;
     size_t offset;
