@@ -77,45 +77,45 @@ context_set(context_t *ctx, uint8_t option, void *value)
 }
 
 bool
-context_get(context_t *ctx, uint8_t option, void **value)
+context_get(context_t *ctx, uint8_t option, void *value)
 {
     switch (option)
     {
         case CTX_FWRITE:
-            *(bool*)*value = ctx->f_write;
+            *(bool*)value = ctx->f_write;
             break;
 
         case CTX_FOPEN:
-            *(bool*)*value = ctx->f_open;
+            *(bool*)value = ctx->f_open;
             break;
 
         case CTX_FLIBC:
-            *(bool*)*value = ctx->f_libc;
+            *(bool*)value = ctx->f_libc;
             break;
 
         case CTX_FWRAP:
-            *(bool*)*value = ctx->f_wrap;
+            *(bool*)value = ctx->f_wrap;
             break;
 
         case CTX_FWRAPPTR:
-            *(bool*)*value = ctx->f_wrap_ptr;
+            *(bool*)value = ctx->f_wrap_ptr;
             break;
 
 
         case CTX_OASM:
-            *(bool*)*value = ctx->o_asm;
+            *(bool*)value = ctx->o_asm;
             break;
 
         case CTX_OMACH:
-            *(bool*)*value = ctx->o_mach;
+            *(bool*)value = ctx->o_mach;
             break;
 
         case CTX_CELLS:
-            *(size_t*)*value = ctx->cells;
+            *(size_t*)value = ctx->cells;
             break;
 
         case CTX_EXTRA:
-            *value = ctx->extra;
+            *(void**)value = ctx->extra;
             break;
 
         default:

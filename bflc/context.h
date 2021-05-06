@@ -22,7 +22,7 @@ void context_reset(context_t *ctx);
 
 bool context_set(context_t *ctx, uint8_t option, void *value);
 
-bool context_get(context_t *ctx, uint8_t option, void **value);
+bool context_get(context_t *ctx, uint8_t option, void *value);
 
 void context_free(context_t *ctx);
 
