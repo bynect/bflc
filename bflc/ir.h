@@ -26,6 +26,7 @@ typedef struct {
 typedef struct {
     instr_t *instrs;
     size_t len;
+    size_t end;
 } ir_t;
 
 void ir_init(ir_t *ir, size_t min);

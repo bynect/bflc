@@ -7,6 +7,7 @@ ir_init(ir_t *ir, size_t min)
 {
     ir->instrs = malloc(min);
     ir->len = min;
+    ir->end = 0;
 }
 
 void
@@ -18,12 +19,14 @@ ir_reset(ir_t *ir, size_t min)
         {
             ir->instrs = realloc(ir->instrs, min);
             ir->len = min;
+            ir->end = 0;
         }
         return;
     }
 
     ir->instrs = malloc(min);
     ir->len = min;
+    ir->end = 0;
 }
 
 void
@@ -42,4 +45,5 @@ ir_free(ir_t *ir)
     free(ir->instrs);
     ir->instrs = NULL;
     ir->len = 0;
+    ir->end = 0;
 }
