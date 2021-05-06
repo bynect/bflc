@@ -3,7 +3,8 @@
 error_t
 scan_brainfuck(const char *src, size_t len, ir_t *ir)
 {
-    error_t error = {NULL, NULL};
+    error_t err;
+    error_init(&err, NULL, NULL);
 
     uint32_t line = 1;
     uint32_t column = 1;
@@ -102,5 +103,5 @@ scan_brainfuck(const char *src, size_t len, ir_t *ir)
     }
 
     ir->end = instr;
-    return error;
+    return err;
 }
