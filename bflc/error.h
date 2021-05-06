@@ -5,7 +5,7 @@
 
 typedef struct {
     const char *pretty;
-    const ir_t instr;
+    const ir_t *instr;
 } error_t;
 
 #endif
