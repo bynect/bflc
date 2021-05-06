@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#define IR_BLOCK 16
+
 #define INSTR_PTRINC 1
 #define INSTR_PTRDEC 2
 #define INSTR_CELINC 3
@@ -22,5 +24,13 @@ typedef struct {
     instr_t *instrs;
     size_t len;
 } ir_t;
+
+void ir_init(ir_t *ir, size_t min);
+
+void ir_reset(ir_t *ir, size_t min);
+
+void ir_ensure(ir_t *ir, size_t len);
+
+void ir_free(ir_t *ir);
 
 #endif
