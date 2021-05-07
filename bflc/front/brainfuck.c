@@ -16,7 +16,7 @@ scan_brainfuck(const char *src, size_t len, ir_t *ir)
         switch (src[i])
         {
             case '>':
-                ir_ensure(ir, instr);
+                ir_ensure(ir, instr + 1);
                 ir->instrs[instr].instr = INSTR_PTRINC;
                 ir->instrs[instr].arg = 1;
                 ir->instrs[instr].line = line;
@@ -26,7 +26,7 @@ scan_brainfuck(const char *src, size_t len, ir_t *ir)
                 break;
 
             case '<':
-                ir_ensure(ir, instr);
+                ir_ensure(ir, instr + 1);
                 ir->instrs[instr].instr = INSTR_PTRDEC;
                 ir->instrs[instr].arg = 1;
                 ir->instrs[instr].line = line;
@@ -36,7 +36,7 @@ scan_brainfuck(const char *src, size_t len, ir_t *ir)
                 break;
 
             case '+':
-                ir_ensure(ir, instr);
+                ir_ensure(ir, instr + 1);
                 ir->instrs[instr].instr = INSTR_CELINC;
                 ir->instrs[instr].arg = 1;
                 ir->instrs[instr].line = line;
@@ -46,7 +46,7 @@ scan_brainfuck(const char *src, size_t len, ir_t *ir)
                 break;
 
             case '-':
-                ir_ensure(ir, instr);
+                ir_ensure(ir, instr + 1);
                 ir->instrs[instr].instr = INSTR_CELDEC;
                 ir->instrs[instr].arg = 1;
                 ir->instrs[instr].line = line;
@@ -56,7 +56,7 @@ scan_brainfuck(const char *src, size_t len, ir_t *ir)
                 break;
 
             case '.':
-                ir_ensure(ir, instr);
+                ir_ensure(ir, instr + 1);
                 ir->instrs[instr].instr = INSTR_OUTPUT;
                 ir->instrs[instr].arg = -1;
                 ir->instrs[instr].line = line;
@@ -66,7 +66,7 @@ scan_brainfuck(const char *src, size_t len, ir_t *ir)
                 break;
 
             case ',':
-                ir_ensure(ir, instr);
+                ir_ensure(ir, instr + 1);
                 ir->instrs[instr].instr = INSTR_INPUT;
                 ir->instrs[instr].arg = -1;
                 ir->instrs[instr].line = line;
@@ -76,7 +76,7 @@ scan_brainfuck(const char *src, size_t len, ir_t *ir)
                 break;
 
             case '[':
-                ir_ensure(ir, instr);
+                ir_ensure(ir, instr + 1);
                 ir->instrs[instr].instr = INSTR_JMPBEG;
                 ir->instrs[instr].arg = -1;
                 ir->instrs[instr].line = line;
@@ -86,7 +86,7 @@ scan_brainfuck(const char *src, size_t len, ir_t *ir)
                 break;
 
             case ']':
-                ir_ensure(ir, instr);
+                ir_ensure(ir, instr + 1);
                 ir->instrs[instr].instr = INSTR_JMPEND;
                 ir->instrs[instr].arg = -1;
                 ir->instrs[instr].line = line;

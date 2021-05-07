@@ -33,6 +33,7 @@ error_node(error_t *err, const char *pretty, const instr_t *instr)
 void
 error_free(error_t *err)
 {
+    err = err->next;
     while (err != NULL)
     {
         error_t *node = err;
