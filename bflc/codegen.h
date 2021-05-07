@@ -24,6 +24,8 @@ typedef struct {
     void *extra;
 } codegen_t;
 
-error_t codegen_run(context_t *ctx, codegen_t *codegen, ir_t *ir);
+error_t codegen_run(
+    context_t *ctx, codegen_t *codegen, bytebuffer_t *buf, ir_t *ir
+);
 
 #endif

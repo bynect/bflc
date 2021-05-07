@@ -43,7 +43,7 @@ bytebuffer_write(bytebuffer_t *buf, uint8_t byte)
 }
 
 void
-bytebuffer_writes(bytebuffer_t *buf, uint8_t *bytes, size_t len)
+bytebuffer_writes(bytebuffer_t *buf, const uint8_t *bytes, size_t len)
 {
     if (buf->pos + len >= buf->len)
     {
