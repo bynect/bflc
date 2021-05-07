@@ -7,7 +7,7 @@
 #include "context.h"
 
 typedef bool (*codegen_fn)(
-    context_t *ctx, bytebuffer_t *buf, error_t *err, void *extra
+    context_t *ctx, bytebuffer_t *buf, instr_t *instr, error_t *err, void *extra
 );
 
 typedef struct {
