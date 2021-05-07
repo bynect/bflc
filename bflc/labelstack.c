@@ -43,7 +43,7 @@ labelstack_push(labelstack_t *labelstack, uint32_t label)
         labelstack->labels = realloc(labelstack->labels, labelstack->len);
     }
 
-    labelstack->labels[labelstack->pos++] = label;
+    labelstack->labels[++labelstack->pos] = label;
 }
 
 bool
