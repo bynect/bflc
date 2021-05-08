@@ -3,6 +3,7 @@
 #include "../labelstack.h"
 
 #include <stdio.h>
+#include <string.h>
 
 static bool
 prologue_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
@@ -24,20 +25,25 @@ prologue_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
         "	.quad	__cellmem\n"
         "\n"
         "	.text\n"
-        "	.globl	main\n"
-        "	.type	main, @function\n"
+        "	.globl	%s\n"
+        "	.type	%s, @function\n"
         "	.align	16\n"
-        "main:\n"
+        "%s:\n"
         "	pushq	%rbp\n"
         "	movq	%rsp, %rbp\n";
 
     size_t cells;
     context_get(ctx, CTX_CELLS, &cells);
 
-    const size_t size = snprintf(NULL, 0, format, cells, cells);
+    char *func_name;
+    context_get(ctx, CTX_FUNCNAME, &func_name);
+
+    const size_t size = snprintf(NULL, 0, format, cells, cells,
+                                func_name, func_name, func_name);
     uint8_t prologue[size + 1];
 
-    snprintf(prologue, size + 1, format, cells, cells);
+    snprintf(prologue, size + 1, format, cells, cells,
+            func_name, func_name, func_name);
     bytebuffer_writes(buf, prologue, size);
 
     return true;
@@ -47,13 +53,35 @@ static bool
 epilogue_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
                     instr_t *instr, error_t *err, void *extra)
 {
-    const uint8_t epilogue[] =
-        "	movl	$0, %eax\n"
-        "	popq	%rbp\n"
-        "	ret\n"
-        "	.size	main, .-main\n";
+    bool libc;
+    context_get(ctx, CTX_FLIBC, &libc);
 
-    bytebuffer_writes(buf, epilogue, sizeof(epilogue));
+    char *func_name;
+    context_get(ctx, CTX_FUNCNAME, &func_name);
+
+    if (libc && !strcmp(func_name, "main"))
+    {
+        const uint8_t epilogue[] =
+            "	movl	$0, %eax\n"
+            "	popq	%rbp\n"
+            "	ret\n"
+            "	.size	main, .-main\n";
+
+        bytebuffer_writes(buf, epilogue, sizeof(epilogue));
+    }
+    else
+    {
+        const char *format =
+            "	popq	%rbp\n"
+            "	ret\n"
+            "	.size	%s, .-%s\n";
+
+        const size_t size = snprintf(NULL, 0, format, func_name, func_name);
+        uint8_t epilogue[size + 1];
+
+        snprintf(epilogue, size + 1, format, func_name, func_name);
+        bytebuffer_writes(buf, epilogue, size + 1);
+    }
 
     return true;
 }
@@ -197,11 +225,11 @@ jmpbeg_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
     uint32_t target = current + 1;
 
     const char *format =
-        "L%u:\n"
+        ".L%u:\n"
         "	movq	__cellptr(%%rip), %%rax\n"
         "	movb	(%%rax), %%al\n"
         "	testb	%%al, %%al\n\n"
-        "	je	L%u\n";
+        "	je	.L%u\n";
 
     const size_t size = snprintf(NULL, 0, format, current, target);
     uint8_t jmpbeg[size + 1];
@@ -228,8 +256,8 @@ jmpend_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
     labelstack_pop(labelstack, &target);
 
     const char *format =
-        "	jmp L%u\n"
-        "L%u:\n";
+        "	jmp .L%u\n"
+        ".L%u:\n";
 
     const size_t size = snprintf(NULL, 0, format, target, next);
     uint8_t jmpend[size + 1];
