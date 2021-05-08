@@ -29,8 +29,8 @@ prologue_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
         "	.type	%s, @function\n"
         "	.align	16\n"
         "%s:\n"
-        "	pushq	%rbp\n"
-        "	movq	%rsp, %rbp\n";
+        "	pushq	%%rbp\n"
+        "	movq	%%rsp, %%rbp\n";
 
     size_t cells;
     context_get(ctx, CTX_CELLS, &cells);
@@ -53,35 +53,20 @@ static bool
 epilogue_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
                     instr_t *instr, error_t *err, void *extra)
 {
-    bool libc;
-    context_get(ctx, CTX_FLIBC, &libc);
-
     char *func_name;
     context_get(ctx, CTX_FUNCNAME, &func_name);
 
-    if (libc && !strcmp(func_name, "main"))
-    {
-        const uint8_t epilogue[] =
-            "	movl	$0, %eax\n"
-            "	popq	%rbp\n"
-            "	ret\n"
-            "	.size	main, .-main\n";
+    const char *format =
+        "	movl	$0, %%eax\n"
+        "	popq	%%rbp\n"
+        "	ret\n"
+        "	.size	%s, .-%s\n";
 
-        bytebuffer_writes(buf, epilogue, sizeof(epilogue));
-    }
-    else
-    {
-        const char *format =
-            "	popq	%rbp\n"
-            "	ret\n"
-            "	.size	%s, .-%s\n";
+    const size_t size = snprintf(NULL, 0, format, func_name, func_name);
+    uint8_t epilogue[size + 1];
 
-        const size_t size = snprintf(NULL, 0, format, func_name, func_name);
-        uint8_t epilogue[size + 1];
-
-        snprintf(epilogue, size + 1, format, func_name, func_name);
-        bytebuffer_writes(buf, epilogue, size + 1);
-    }
+    snprintf(epilogue, size + 1, format, func_name, func_name);
+    bytebuffer_writes(buf, epilogue, size + 1);
 
     return true;
 }
