@@ -7,8 +7,8 @@ ir_validate(context_t *ctx, ir_t *ir)
     error_init(&err, NULL, NULL);
 
     int32_t jmps = 0;
-    size_t jmpbeg = 0;
-    size_t jmpend = 0;
+    instr_t *jmpbeg;
+    instr_t *jmpend;
 
     size_t cellptr = 0;
     size_t cellmax;
@@ -17,15 +17,15 @@ ir_validate(context_t *ctx, ir_t *ir)
     bool wrap_ptr;
     context_get(ctx, CTX_FWRAPPTR, &wrap_ptr);
 
-    for (size_t i = 0; i < ir->end; ++i)
+    for (instr_t *instr = ir->instrs; instr != NULL; instr = instr->next)
     {
-        switch (ir->instrs[i].instr)
+        switch (instr->instr)
         {
             case INSTR_PTRINC:
                 if (cellptr == cellmax && !wrap_ptr)
                 {
                     error_node(
-                        &err, "Cell pointer out of lower bounds", ir->instrs + i
+                        &err, "Cell pointer out of lower bounds", instr
                     );
                 }
                 else
@@ -38,7 +38,7 @@ ir_validate(context_t *ctx, ir_t *ir)
                 if (cellptr == 0 && !wrap_ptr)
                 {
                     error_node(
-                        &err, "Cell pointer out of upper bounds", ir->instrs + i
+                        &err, "Cell pointer out of upper bounds", instr
                     );
                 }
                 else
@@ -49,21 +49,20 @@ ir_validate(context_t *ctx, ir_t *ir)
 
             case INSTR_JMPBEG:
                 ++jmps;
-                jmpbeg = i;
+                jmpbeg = instr;
                 break;
 
             case INSTR_JMPEND:
                 --jmps;
-                jmpend = i;
+                jmpend = instr;
                 break;
         }
     }
 
     if (jmps != 0)
     {
-        size_t jmp = jmps > 0 ? jmpbeg : jmpend;
         error_node(
-            &err, "Unmatched jump", ir->instrs + jmp
+            &err, "Unmatched jump", jmps > 0 ? jmpbeg : jmpend
         );
     }
 

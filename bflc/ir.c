@@ -3,50 +3,43 @@
 #include <malloc.h>
 
 void
-ir_init(ir_t *ir, size_t min)
+ir_init(ir_t *ir)
 {
-    min *= sizeof(instr_t);
-    ir->instrs = malloc(min);
-    ir->len = min;
-    ir->end = 0;
+    ir->instrs = NULL;
 }
 
 void
-ir_reset(ir_t *ir, size_t min)
+ir_node(ir_t *ir, uint8_t instr, intptr_t arg, pos_t pos)
 {
-    min *= sizeof(instr_t);
-    if (ir->instrs != NULL)
+    instr_t *node = malloc(sizeof(instr_t));
+    node->instr = instr;
+    node->arg = arg;
+    node->pos = pos;
+    node->next = NULL;
+
+    if (ir->instrs == NULL)
     {
-        if (ir->len < min)
-        {
-            ir->instrs = realloc(ir->instrs, min);
-            ir->len = min;
-            ir->end = 0;
-        }
-        return;
+        ir->instrs = node;
     }
-
-    ir->instrs = malloc(min);
-    ir->len = min;
-    ir->end = 0;
-}
-
-void
-ir_ensure(ir_t *ir, size_t len)
-{
-    len *= sizeof(instr_t);
-    if (ir->len < len)
+    else
     {
-        ir->len = len + IR_BLOCK;
-        ir->instrs = realloc(ir->instrs, ir->len);
+        instr_t *ptr = ir->instrs;
+        while (ptr->next != NULL)
+        {
+            ptr = ptr->next;
+        }
+        ptr->next = node;
     }
 }
 
 void
 ir_free(ir_t *ir)
 {
-    free(ir->instrs);
-    ir->instrs = NULL;
-    ir->len = 0;
-    ir->end = 0;
+    instr_t *instr = ir->instrs;
+    while (instr != NULL)
+    {
+        instr_t *node = instr;
+        instr = instr->next;
+        free(node);
+    }
 }

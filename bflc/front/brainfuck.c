@@ -6,102 +6,59 @@ scan_brainfuck(const char *src, size_t len, ir_t *ir)
     error_t err;
     error_init(&err, NULL, NULL);
 
-    uint32_t line = 1;
-    uint32_t column = 1;
-    size_t instr = 0;
+    pos_t pos = {1, 1, 0};
 
     for (size_t i = 0; i < len; ++i)
     {
-        ++column;
+        ++pos.column;
         switch (src[i])
         {
             case '>':
-                ir_ensure(ir, instr + 1);
-                ir->instrs[instr].instr = INSTR_PTRINC;
-                ir->instrs[instr].arg = 1;
-                ir->instrs[instr].line = line;
-                ir->instrs[instr].column = column;
-                ir->instrs[instr].offset = i;
-                ++instr;
+                pos.offset = i;
+                ir_node(ir, INSTR_PTRINC, 1, pos);
                 break;
 
             case '<':
-                ir_ensure(ir, instr + 1);
-                ir->instrs[instr].instr = INSTR_PTRDEC;
-                ir->instrs[instr].arg = 1;
-                ir->instrs[instr].line = line;
-                ir->instrs[instr].column = column;
-                ir->instrs[instr].offset = i;
-                ++instr;
+                pos.offset = i;
+                ir_node(ir, INSTR_PTRDEC, 1, pos);
                 break;
 
             case '+':
-                ir_ensure(ir, instr + 1);
-                ir->instrs[instr].instr = INSTR_CELINC;
-                ir->instrs[instr].arg = 1;
-                ir->instrs[instr].line = line;
-                ir->instrs[instr].column = column;
-                ir->instrs[instr].offset = i;
-                ++instr;
+                pos.offset = i;
+                ir_node(ir, INSTR_CELINC, 1, pos);
                 break;
 
             case '-':
-                ir_ensure(ir, instr + 1);
-                ir->instrs[instr].instr = INSTR_CELDEC;
-                ir->instrs[instr].arg = 1;
-                ir->instrs[instr].line = line;
-                ir->instrs[instr].column = column;
-                ir->instrs[instr].offset = i;
-                ++instr;
+                pos.offset = i;
+                ir_node(ir, INSTR_CELDEC, 1, pos);
                 break;
 
             case '.':
-                ir_ensure(ir, instr + 1);
-                ir->instrs[instr].instr = INSTR_OUTPUT;
-                ir->instrs[instr].arg = -1;
-                ir->instrs[instr].line = line;
-                ir->instrs[instr].column = column;
-                ir->instrs[instr].offset = i;
-                ++instr;
+                pos.offset = i;
+                ir_node(ir, INSTR_OUTPUT, -1, pos);
                 break;
 
             case ',':
-                ir_ensure(ir, instr + 1);
-                ir->instrs[instr].instr = INSTR_INPUT;
-                ir->instrs[instr].arg = -1;
-                ir->instrs[instr].line = line;
-                ir->instrs[instr].column = column;
-                ir->instrs[instr].offset = i;
-                ++instr;
+                pos.offset = i;
+                ir_node(ir, INSTR_INPUT, -1, pos);
                 break;
 
             case '[':
-                ir_ensure(ir, instr + 1);
-                ir->instrs[instr].instr = INSTR_JMPBEG;
-                ir->instrs[instr].arg = -1;
-                ir->instrs[instr].line = line;
-                ir->instrs[instr].column = column;
-                ir->instrs[instr].offset = i;
-                ++instr;
+                pos.offset = i;
+                ir_node(ir, INSTR_JMPBEG, -1, pos);
                 break;
 
             case ']':
-                ir_ensure(ir, instr + 1);
-                ir->instrs[instr].instr = INSTR_JMPEND;
-                ir->instrs[instr].arg = -1;
-                ir->instrs[instr].line = line;
-                ir->instrs[instr].column = column;
-                ir->instrs[instr].offset = i;
-                ++instr;
+                pos.offset = i;
+                ir_node(ir, INSTR_JMPEND, -1, pos);
                 break;
 
             case '\n':
-                column = 1;
-                ++line;
+                pos.column = 1;
+                ++pos.line;
                 break;
         }
     }
 
-    ir->end = instr;
     return err;
 }
