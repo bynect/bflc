@@ -188,14 +188,31 @@ static bool
 output_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
                 instr_t *instr, error_t *err, void *extra)
 {
-    const uint8_t output[] =
-        "	movq	__cellptr(%rip), %rax\n"
-        "	movzbl	(%rax), %eax\n"
-        "	movsbl	%al, %eax\n"
-        "	movl	%eax, %edi\n"
-        "	call	putchar@PLT\n";
+    bool f_write;
+    context_get(ctx, CTX_FWRITE, &f_write);
 
-    bytebuffer_writes(buf, output, sizeof(output) - 1);
+    if (f_write)
+    {
+        const uint8_t output[] =
+            "	movq	$1, %rax\n"
+            "	movq	$1, %rdi\n"
+            "	movq	__cellptr(%rip), %rsi\n"
+            "	movq	$1, %rdx\n"
+            "	syscall\n";
+
+        bytebuffer_writes(buf, output, sizeof(output) - 1);
+    }
+    else
+    {
+        const uint8_t output[] =
+            "	movq	__cellptr(%rip), %rax\n"
+            "	movzbl	(%rax), %eax\n"
+            "	movsbl	%al, %eax\n"
+            "	movl	%eax, %edi\n"
+            "	call	putchar@PLT\n";
+
+        bytebuffer_writes(buf, output, sizeof(output) - 1);
+    }
 
     return true;
 }
@@ -204,13 +221,30 @@ static bool
 input_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
                 instr_t *instr, error_t *err, void *extra)
 {
-    const uint8_t input[] =
-        "	call	getchar@PLT\n"
-        "	movl	%eax, %edx\n"
-        "	movq	__cellptr(%rip), %rax\n"
-        "	movb	%dl, (%rax)\n";
+    bool f_read;
+    context_get(ctx, CTX_FREAD, &f_read);
 
-    bytebuffer_writes(buf, input, sizeof(input) - 1);
+    if (f_read)
+    {
+        const uint8_t input[] =
+            "	movq	$0, %rax\n"
+            "	movl	$0, %rdi\n"
+            "	movl	__cellptr(%rip), %rsi\n"
+            "	movl	$1, %rdx\n"
+            "	syscall\n";
+
+        bytebuffer_writes(buf, input, sizeof(input) - 1);
+    }
+    else
+    {
+        const uint8_t input[] =
+            "	call	getchar@PLT\n"
+            "	movl	%eax, %edx\n"
+            "	movq	__cellptr(%rip), %rax\n"
+            "	movb	%dl, (%rax)\n";
+
+        bytebuffer_writes(buf, input, sizeof(input) - 1);
+    }
 
     return true;
 }
