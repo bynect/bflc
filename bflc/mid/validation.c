@@ -1,7 +1,7 @@
 #include "validation.h"
 
 error_t
-ir_validate(context_t *ctx, ir_t *ir)
+pass_validate(context_t *ctx, ir_t *ir)
 {
     error_t err;
     error_init(&err, NULL, NULL);

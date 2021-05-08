@@ -5,6 +5,6 @@
 #include "../error.h"
 #include "../context.h"
 
-error_t ir_validate(context_t *ctx, ir_t *ir);
+error_t pass_validate(context_t *ctx, ir_t *ir);
 
 #endif
