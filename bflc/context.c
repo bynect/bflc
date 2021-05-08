@@ -5,7 +5,7 @@
 
 struct context {
     bool f_write;
-    bool f_open;
+    bool f_read;
     bool f_libc;
     bool f_wrap;
     bool f_wrap_ptr;
@@ -38,8 +38,8 @@ context_set(context_t *ctx, uint8_t option, void *value)
             ctx->f_write = *(bool*)value;
             break;
 
-        case CTX_FOPEN:
-            ctx->f_open = *(bool*)value;
+        case CTX_FREAD:
+            ctx->f_read = *(bool*)value;
             break;
 
         case CTX_FLIBC:
@@ -90,8 +90,8 @@ context_get(context_t *ctx, uint8_t option, void *value)
             *(bool*)value = ctx->f_write;
             break;
 
-        case CTX_FOPEN:
-            *(bool*)value = ctx->f_open;
+        case CTX_FREAD:
+            *(bool*)value = ctx->f_read;
             break;
 
         case CTX_FLIBC:

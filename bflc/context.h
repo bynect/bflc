@@ -5,7 +5,7 @@
 #include <stdbool.h>
 
 #define CTX_FWRITE 1
-#define CTX_FOPEN 2
+#define CTX_FREAD 2
 #define CTX_FLIBC 3
 #define CTX_FWRAP 4
 #define CTX_FWRAPPTR 5
