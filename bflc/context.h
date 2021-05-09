@@ -14,7 +14,8 @@
 #define CTX_CELLS 8
 #define CTX_FUNCNAME 9
 #define CTX_INTELASM 10
-#define CTX_EXTRA 11
+#define CTX_INTELBIN 11
+#define CTX_EXTRA 12
 
 typedef struct context context_t;
 

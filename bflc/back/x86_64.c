@@ -9,48 +9,85 @@ static bool
 prologue_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
                     instr_t *instr, error_t *err, void *extra)
 {
-    size_t cells;
-    context_get(ctx, CTX_CELLS, &cells);
-
-    char *func_name;
-    context_get(ctx, CTX_FUNCNAME, &func_name);
-
     bool intel;
     context_get(ctx, CTX_INTELASM, &intel);
 
     if (intel)
     {
-        const char *format =
-            "	extern	putchar\n"
-            "	extern	getchar\n"
-            "\n"
-            "	section	.bss\n"
-            "	align	32\n"
-            "__cellmem:\n"
-            "	resb	%zu\n"
-            "\n"
-            "	section	.data\n"
-            "	align	8\n"
-            "__cellptr:\n"
-            "	dq	__cellmem\n"
-            "\n"
-            "	section	.text\n"
-            "	global	%s\n"
-            "	align	16\n"
-            "%s:\n"
-            "	push	rbp\n"
-            "	mov	rbp, rsp\n";
+        bool intel_bin;
+        context_get(ctx, CTX_INTELBIN, &intel_bin);
 
-        const size_t size = snprintf(NULL, 0, format, cells,
-                                    func_name, func_name);
-        uint8_t prologue[size + 1];
+        bool f_write;
+        context_get(ctx, CTX_FWRITE, &f_write);
 
-        snprintf(prologue, size + 1, format, cells,
-                func_name, func_name);
-        bytebuffer_writes(buf, prologue, size);
+        bool f_read;
+        context_get(ctx, CTX_FREAD, &f_read);
+
+        if (intel_bin && (f_write || f_read))
+        {
+            error_node(err, "Binary output can use only syscalls", NULL);
+        }
+
+        if (intel_bin)
+        {
+            const uint8_t prologue[] =
+                "	bits 64\n"
+                "	section	.text\n"
+                "	align	16\n"
+                "__prog:\n"
+                "	push	rbp\n"
+                "	mov	rbp, rsp\n"
+                "	lea	rax, [rel __cellmem]\n"
+                "	mov	[rel __cellptr], rax\n";
+
+            bytebuffer_writes(buf, prologue, sizeof(prologue) - 1);
+        }
+        else
+        {
+            size_t cells;
+            context_get(ctx, CTX_CELLS, &cells);
+
+            char *func_name;
+            context_get(ctx, CTX_FUNCNAME, &func_name);
+
+            const char *format =
+                "	extern	putchar\n"
+                "	extern	getchar\n"
+                "\n"
+                "	section	.bss\n"
+                "	align	32\n"
+                "__cellmem:\n"
+                "	resb	%zu\n"
+                "\n"
+                "	section	.data\n"
+                "	align	8\n"
+                "__cellptr:\n"
+                "	dq	__cellmem\n"
+                "\n"
+                "	section	.text\n"
+                "	global	%s\n"
+                "	align	16\n"
+                "%s:\n"
+                "	push	rbp\n"
+                "	mov	rbp, rsp\n";
+
+            const size_t size = snprintf(NULL, 0, format, cells,
+                                        func_name, func_name);
+            uint8_t prologue[size + 1];
+
+            snprintf(prologue, size + 1, format, cells,
+                    func_name, func_name);
+            bytebuffer_writes(buf, prologue, size);
+        }
     }
     else
     {
+            size_t cells;
+        context_get(ctx, CTX_CELLS, &cells);
+
+        char *func_name;
+        context_get(ctx, CTX_FUNCNAME, &func_name);
+
         const char *format =
             "	.bss\n"
             "	.align	32\n"
@@ -98,12 +135,42 @@ epilogue_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
 
     if (intel)
     {
-        uint8_t epilogue[] =
-            "	mov	eax, 0\n"
-            "	pop	rbp\n"
-            "	ret\n";
+        bool intel_bin;
+        context_get(ctx, CTX_INTELBIN, &intel_bin);
 
-        bytebuffer_writes(buf, epilogue, sizeof(epilogue) - 1);
+        if (intel_bin)
+        {
+            size_t cells;
+            context_get(ctx, CTX_CELLS, &cells);
+
+            const char *format =
+                "	mov	eax, 0\n"
+                "	pop	rbp\n"
+                "	ret\n"
+                "\n"
+                "	align	32\n"
+                "__cellmem:\n"
+                "	times	%zu db 0\n"
+                "\n"
+                "	align	8\n"
+                "__cellptr:\n"
+                "	dq	0\n";
+
+            const size_t size = snprintf(NULL, 0, format, cells);
+            uint8_t epilogue[size + 1];
+
+            snprintf(epilogue, size + 1, format, cells);
+            bytebuffer_writes(buf, epilogue, size);
+        }
+        else
+        {
+            uint8_t epilogue[] =
+                "	mov	eax, 0\n"
+                "	pop	rbp\n"
+                "	ret\n";
+
+            bytebuffer_writes(buf, epilogue, sizeof(epilogue) - 1);
+        }
     }
     else
     {

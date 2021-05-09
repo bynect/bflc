@@ -14,6 +14,7 @@ struct context {
     size_t cells;
     char *func_name;
     bool intel_asm;
+    bool intel_bin;
     void *extra;
 };
 
@@ -75,6 +76,10 @@ context_set(context_t *ctx, uint8_t option, void *value)
             ctx->intel_asm = *(bool*)value;
             break;
 
+        case CTX_INTELBIN:
+            ctx->intel_bin= *(bool*)value;
+            break;
+
         case CTX_EXTRA:
             ctx->extra = value;
             break;
@@ -130,6 +135,10 @@ context_get(context_t *ctx, uint8_t option, void *value)
 
         case CTX_INTELASM:
             *(bool*)value = ctx->intel_asm;
+            break;
+
+        case CTX_INTELBIN:
+            *(bool*)value = ctx->intel_bin;
             break;
 
         case CTX_EXTRA:
