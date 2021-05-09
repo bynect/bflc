@@ -13,6 +13,7 @@ struct context {
     bool o_mach;
     size_t cells;
     char *func_name;
+    bool intel_asm;
     void *extra;
 };
 
@@ -70,6 +71,10 @@ context_set(context_t *ctx, uint8_t option, void *value)
             ctx->func_name = (char*)value;
             break;
 
+        case CTX_INTELASM:
+            ctx->intel_asm = *(bool*)value;
+            break;
+
         case CTX_EXTRA:
             ctx->extra = value;
             break;
@@ -121,6 +126,10 @@ context_get(context_t *ctx, uint8_t option, void *value)
 
         case CTX_FUNCNAME:
             *(char**)value = ctx->func_name;
+            break;
+
+        case CTX_INTELASM:
+            *(bool*)value = ctx->intel_asm;
             break;
 
         case CTX_EXTRA:

@@ -9,42 +9,79 @@ static bool
 prologue_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
                     instr_t *instr, error_t *err, void *extra)
 {
-    const char *format =
-        "	.bss\n"
-        "	.align	32\n"
-        "	.type	__cellmem, @object\n"
-        "	.size	__cellmem, %zu\n"
-        "__cellmem:\n"
-        "	.zero	%zu\n"
-        "\n"
-        "	.data\n"
-        "	.align	8\n"
-        "	.type	__cellptr, @object\n"
-        "	.size	__cellptr, 8\n"
-        "__cellptr:\n"
-        "	.quad	__cellmem\n"
-        "\n"
-        "	.text\n"
-        "	.globl	%s\n"
-        "	.type	%s, @function\n"
-        "	.align	16\n"
-        "%s:\n"
-        "	pushq	%%rbp\n"
-        "	movq	%%rsp, %%rbp\n";
-
     size_t cells;
     context_get(ctx, CTX_CELLS, &cells);
 
     char *func_name;
     context_get(ctx, CTX_FUNCNAME, &func_name);
 
-    const size_t size = snprintf(NULL, 0, format, cells, cells,
-                                func_name, func_name, func_name);
-    uint8_t prologue[size + 1];
+    bool intel;
+    context_get(ctx, CTX_INTELASM, &intel);
 
-    snprintf(prologue, size + 1, format, cells, cells,
-            func_name, func_name, func_name);
-    bytebuffer_writes(buf, prologue, size);
+    if (intel)
+    {
+        const char *format =
+            "	extern	putchar\n"
+            "	extern	getchar\n"
+            "\n"
+            "	section	.bss\n"
+            "	align	32\n"
+            "__cellmem:\n"
+            "	resb	%zu\n"
+            "\n"
+            "	section	.data\n"
+            "	align	8\n"
+            "__cellptr:\n"
+            "	dq	__cellmem\n"
+            "\n"
+            "	section	.text\n"
+            "	global	%s\n"
+            "	align	16\n"
+            "%s:\n"
+            "	push	rbp\n"
+            "	mov	rbp, rsp\n";
+
+        const size_t size = snprintf(NULL, 0, format, cells,
+                                    func_name, func_name);
+        uint8_t prologue[size + 1];
+
+        snprintf(prologue, size + 1, format, cells,
+                func_name, func_name);
+        bytebuffer_writes(buf, prologue, size);
+    }
+    else
+    {
+        const char *format =
+            "	.bss\n"
+            "	.align	32\n"
+            "	.type	__cellmem, @object\n"
+            "	.size	__cellmem, %zu\n"
+            "__cellmem:\n"
+            "	.zero	%zu\n"
+            "\n"
+            "	.data\n"
+            "	.align	8\n"
+            "	.type	__cellptr, @object\n"
+            "	.size	__cellptr, 8\n"
+            "__cellptr:\n"
+            "	.quad	__cellmem\n"
+            "\n"
+            "	.text\n"
+            "	.globl	%s\n"
+            "	.type	%s, @function\n"
+            "	.align	16\n"
+            "%s:\n"
+            "	pushq	%%rbp\n"
+            "	movq	%%rsp, %%rbp\n";
+
+        const size_t size = snprintf(NULL, 0, format, cells, cells,
+                                    func_name, func_name, func_name);
+        uint8_t prologue[size + 1];
+
+        snprintf(prologue, size + 1, format, cells, cells,
+                func_name, func_name, func_name);
+        bytebuffer_writes(buf, prologue, size);
+    }
 
     return true;
 }
@@ -56,17 +93,32 @@ epilogue_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
     char *func_name;
     context_get(ctx, CTX_FUNCNAME, &func_name);
 
-    const char *format =
-        "	movl	$0, %%eax\n"
-        "	popq	%%rbp\n"
-        "	ret\n"
-        "	.size	%s, .-%s\n";
+    bool intel;
+    context_get(ctx, CTX_INTELASM, &intel);
 
-    const size_t size = snprintf(NULL, 0, format, func_name, func_name);
-    uint8_t epilogue[size + 1];
+    if (intel)
+    {
+        uint8_t epilogue[] =
+            "	mov	eax, 0\n"
+            "	pop	rbp\n"
+            "	ret\n";
 
-    snprintf(epilogue, size + 1, format, func_name, func_name);
-    bytebuffer_writes(buf, epilogue, size);
+        bytebuffer_writes(buf, epilogue, sizeof(epilogue) - 1);
+    }
+    else
+    {
+        const char *format =
+            "	movl	$0, %%eax\n"
+            "	popq	%%rbp\n"
+            "	ret\n"
+            "	.size	%s, .-%s\n";
+
+        const size_t size = snprintf(NULL, 0, format, func_name, func_name);
+        uint8_t epilogue[size + 1];
+
+        snprintf(epilogue, size + 1, format, func_name, func_name);
+        bytebuffer_writes(buf, epilogue, size);
+    }
 
     return true;
 }
@@ -81,10 +133,25 @@ ptrinc_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
         return false;
     }
 
-    const char *format =
-        "	movq	__cellptr(%%rip), %%rax\n"
-        "	addq	$%ld, %%rax\n"
-        "	movq	%%rax, __cellptr(%%rip)\n";
+    bool intel;
+    context_get(ctx, CTX_INTELASM, &intel);
+
+    char *format;
+
+    if (intel)
+    {
+        format =
+            "	mov	rax, [rel __cellptr]\n"
+            "	add	rax, %ld\n"
+            "	mov	[rel __cellptr], rax\n";
+    }
+    else
+    {
+        format =
+            "	movq	__cellptr(%%rip), %%rax\n"
+            "	addq	$%ld, %%rax\n"
+            "	movq	%%rax, __cellptr(%%rip)\n";
+    }
 
     const size_t size = snprintf(NULL, 0, format, instr->arg);
     uint8_t ptrinc[size + 1];
@@ -105,16 +172,31 @@ ptrdec_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
         return false;
     }
 
-    const char *format =
-        "	movq	__cellptr(%%rip), %%rax\n"
-        "	subq	$%ld, %%rax\n"
-        "	movq	%%rax, __cellptr(%%rip)\n";
+    bool intel;
+    context_get(ctx, CTX_INTELASM, &intel);
+
+    char *format;
+
+    if (intel)
+    {
+        format =
+            "	mov	rax, [rel __cellptr]\n"
+            "	sub	rax, %ld\n"
+            "	mov	[rel __cellptr], rax\n";
+    }
+    else
+    {
+        const char *format =
+            "	movq	__cellptr(%%rip), %%rax\n"
+            "	subq	$%ld, %%rax\n"
+            "	movq	%%rax, __cellptr(%%rip)\n";
+    }
 
     const size_t size = snprintf(NULL, 0, format, instr->arg);
-    uint8_t ptrdec[size + 1];
+    uint8_t ptrinc[size + 1];
 
-    snprintf(ptrdec, size + 1, format, instr->arg);
-    bytebuffer_writes(buf, ptrdec, size);
+    snprintf(ptrinc, size + 1, format, instr->arg);
+    bytebuffer_writes(buf, ptrinc, size);
 
     return true;
 }
@@ -129,11 +211,27 @@ celinc_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
         return false;
     }
 
-    const char *format =
-        "	movq	__cellptr(%%rip), %%rax\n"
-        "	movzbl	(%%rax), %%edx\n"
-        "	addl	$%ld, %%edx\n"
-        "	movb	%%dl, (%%rax)\n";
+    bool intel;
+    context_get(ctx, CTX_INTELASM, &intel);
+
+    char *format;
+
+    if (intel)
+    {
+        format =
+            "	mov	rax, [rel __cellptr]\n"
+            "	movzx	edx, BYTE [rax]\n"
+            "	add	edx, %ld\n"
+            "	mov	[rax], BYTE dl\n";
+    }
+    else
+    {
+        format =
+            "	movq	__cellptr(%%rip), %%rax\n"
+            "	movzbl	(%%rax), %%edx\n"
+            "	addl	$%ld, %%edx\n"
+            "	movb	%%dl, (%%rax)\n";
+    }
 
     const size_t size = snprintf(NULL, 0, format, instr->arg);
     uint8_t celinc[size + 1];
@@ -154,17 +252,33 @@ celdec_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
         return false;
     }
 
-    const char *format =
-        "	movq	__cellptr(%%rip), %%rax\n"
-        "	movzbl	(%%rax), %%edx\n"
-        "	subl	$%ld, %%edx\n"
-        "	movb	%%dl, (%%rax)\n";
+    bool intel;
+    context_get(ctx, CTX_INTELASM, &intel);
+
+    char *format;
+
+    if (intel)
+    {
+        format =
+            "	mov	rax, [rel __cellptr]\n"
+            "	movzx	edx, BYTE [rax]\n"
+            "	sub	edx, %ld\n"
+            "	mov	[rax], BYTE dl\n";
+    }
+    else
+    {
+        format =
+            "	movq	__cellptr(%%rip), %%rax\n"
+            "	movzbl	(%%rax), %%edx\n"
+            "	subl	$%ld, %%edx\n"
+            "	movb	%%dl, (%%rax)\n";
+    }
 
     const size_t size = snprintf(NULL, 0, format, instr->arg);
-    uint8_t celdec[size + 1];
+    uint8_t celinc[size + 1];
 
-    snprintf(celdec, size + 1, format, instr->arg);
-    bytebuffer_writes(buf, celdec, size);
+    snprintf(celinc, size + 1, format, instr->arg);
+    bytebuffer_writes(buf, celinc, size);
 
     return true;
 }
@@ -176,27 +290,44 @@ output_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
     bool f_write;
     context_get(ctx, CTX_FWRITE, &f_write);
 
-    if (f_write)
+    bool intel;
+    context_get(ctx, CTX_INTELASM, &intel);
+
+    if (intel)
     {
         const uint8_t output[] =
-            "	movq	$1, %rax\n"
-            "	movq	$1, %rdi\n"
-            "	movq	__cellptr(%rip), %rsi\n"
-            "	movq	$1, %rdx\n"
-            "	syscall\n";
+            "	mov	rax, [rel __cellptr]\n"
+            "	movzx	eax, BYTE [rax]\n"
+            "	movsx	eax, al\n"
+            "	mov	edi, eax\n"
+            "	call	[rel putchar wrt ..got]\n";
 
         bytebuffer_writes(buf, output, sizeof(output) - 1);
     }
     else
     {
-        const uint8_t output[] =
-            "	movq	__cellptr(%rip), %rax\n"
-            "	movzbl	(%rax), %eax\n"
-            "	movsbl	%al, %eax\n"
-            "	movl	%eax, %edi\n"
-            "	call	putchar@PLT\n";
+        if (f_write)
+        {
+            const uint8_t output[] =
+                "	movq	$1, %rax\n"
+                "	movq	$1, %rdi\n"
+                "	movq	__cellptr(%rip), %rsi\n"
+                "	movq	$1, %rdx\n"
+                "	syscall\n";
 
-        bytebuffer_writes(buf, output, sizeof(output) - 1);
+            bytebuffer_writes(buf, output, sizeof(output) - 1);
+        }
+        else
+        {
+            const uint8_t output[] =
+                "	movq	__cellptr(%rip), %rax\n"
+                "	movzbl	(%rax), %eax\n"
+                "	movsbl	%al, %eax\n"
+                "	movl	%eax, %edi\n"
+                "	call	putchar@PLT\n";
+
+            bytebuffer_writes(buf, output, sizeof(output) - 1);
+        }
     }
 
     return true;
@@ -209,26 +340,42 @@ input_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
     bool f_read;
     context_get(ctx, CTX_FREAD, &f_read);
 
-    if (f_read)
-    {
-        const uint8_t input[] =
-            "	movq	$0, %rax\n"
-            "	movl	$0, %rdi\n"
-            "	movl	__cellptr(%rip), %rsi\n"
-            "	movl	$1, %rdx\n"
-            "	syscall\n";
+    bool intel;
+    context_get(ctx, CTX_INTELASM, &intel);
 
-        bytebuffer_writes(buf, input, sizeof(input) - 1);
+    if (intel)
+    {
+        const uint8_t output[] =
+            "	call	[rel getchar wrt ..got]\n"
+            "	mov	edx, eax\n"
+            "	mov	rax, [rel __cellptr]\n"
+            "	mov	BYTE [rax], dl\n";
+
+        bytebuffer_writes(buf, output, sizeof(output) - 1);
     }
     else
     {
-        const uint8_t input[] =
-            "	call	getchar@PLT\n"
-            "	movl	%eax, %edx\n"
-            "	movq	__cellptr(%rip), %rax\n"
-            "	movb	%dl, (%rax)\n";
+        if (f_read)
+        {
+            const uint8_t input[] =
+                "	movq	$0, %rax\n"
+                "	movl	$0, %rdi\n"
+                "	movl	__cellptr(%rip), %rsi\n"
+                "	movl	$1, %rdx\n"
+                "	syscall\n";
 
-        bytebuffer_writes(buf, input, sizeof(input) - 1);
+            bytebuffer_writes(buf, input, sizeof(input) - 1);
+        }
+        else
+        {
+            const uint8_t input[] =
+                "	call	getchar@PLT\n"
+                "	movl	%eax, %edx\n"
+                "	movq	__cellptr(%rip), %rax\n"
+                "	movb	%dl, (%rax)\n";
+
+            bytebuffer_writes(buf, input, sizeof(input) - 1);
+        }
     }
 
     return true;
@@ -243,12 +390,29 @@ jmpbeg_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
     uint32_t current = labelstack->current;
     uint32_t target = current + 1;
 
-    const char *format =
-        ".L%u:\n"
-        "	movq	__cellptr(%%rip), %%rax\n"
-        "	movb	(%%rax), %%al\n"
-        "	testb	%%al, %%al\n\n"
-        "	je	.L%u\n";
+    bool intel;
+    context_get(ctx, CTX_INTELASM, &intel);
+
+    char *format;
+
+    if (intel)
+    {
+        format =
+            ".L%u:\n"
+            "	mov	rax, [rel __cellptr]\n"
+            "	mov	al, BYTE [rax]\n"
+            "	test	al, al\n\n"
+            "	je	.L%u\n";
+    }
+    else
+    {
+        format =
+            ".L%u:\n"
+            "	movq	__cellptr(%%rip), %%rax\n"
+            "	movb	(%%rax), %%al\n"
+            "	testb	%%al, %%al\n\n"
+            "	je	.L%u\n";
+    }
 
     const size_t size = snprintf(NULL, 0, format, current, target);
     uint8_t jmpbeg[size + 1];
@@ -275,7 +439,7 @@ jmpend_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
     labelstack_pop(labelstack, &target);
 
     const char *format =
-        "	jmp .L%u\n"
+        "	jmp	.L%u\n"
         ".L%u:\n";
 
     const size_t size = snprintf(NULL, 0, format, target, next);
