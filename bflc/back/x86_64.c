@@ -295,14 +295,28 @@ output_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
 
     if (intel)
     {
-        const uint8_t output[] =
-            "	mov	rax, [rel __cellptr]\n"
-            "	movzx	eax, BYTE [rax]\n"
-            "	movsx	eax, al\n"
-            "	mov	edi, eax\n"
-            "	call	[rel putchar wrt ..got]\n";
+        if (f_write)
+        {
+            const uint8_t output[] =
+                "	mov	rax, 1\n"
+                "	mov	rdi, 1\n"
+                "	mov	rsi, [rel __cellptr]\n"
+                "	mov	rdx, 1\n"
+                "	syscall\n";
 
-        bytebuffer_writes(buf, output, sizeof(output) - 1);
+            bytebuffer_writes(buf, output, sizeof(output) - 1);
+        }
+        else
+        {
+            const uint8_t output[] =
+                "	mov	rax, [rel __cellptr]\n"
+                "	movzx	eax, BYTE [rax]\n"
+                "	movsx	eax, al\n"
+                "	mov	edi, eax\n"
+                "	call	[rel putchar wrt ..got]\n";
+
+            bytebuffer_writes(buf, output, sizeof(output) - 1);
+        }
     }
     else
     {
@@ -345,13 +359,27 @@ input_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
 
     if (intel)
     {
-        const uint8_t output[] =
-            "	call	[rel getchar wrt ..got]\n"
-            "	mov	edx, eax\n"
-            "	mov	rax, [rel __cellptr]\n"
-            "	mov	BYTE [rax], dl\n";
+        if (f_read)
+        {
+            const uint8_t input[] =
+                "	mov	rax, 0\n"
+                "	mov	rdi, 0\n"
+                "	mov	rsi, [rel __cellptr]\n"
+                "	mov	rdx, 1\n"
+                "	syscall\n";
 
-        bytebuffer_writes(buf, output, sizeof(output) - 1);
+            bytebuffer_writes(buf, input, sizeof(input) - 1);
+        }
+        else
+        {
+            const uint8_t input[] =
+                "	call	[rel getchar wrt ..got]\n"
+                "	mov	edx, eax\n"
+                "	mov	rax, [rel __cellptr]\n"
+                "	mov	BYTE [rax], dl\n";
+
+            bytebuffer_writes(buf, input, sizeof(input) - 1);
+        }
     }
     else
     {
