@@ -66,7 +66,7 @@ epilogue_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
     uint8_t epilogue[size + 1];
 
     snprintf(epilogue, size + 1, format, func_name, func_name);
-    bytebuffer_writes(buf, epilogue, size + 1);
+    bytebuffer_writes(buf, epilogue, size);
 
     return true;
 }
