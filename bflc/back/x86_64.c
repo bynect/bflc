@@ -31,7 +31,7 @@ prologue_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
         if (intel_bin)
         {
             const uint8_t prologue[] =
-                "	bits 64\n"
+                "	bits	64\n"
                 "	section	.text\n"
                 "	align	16\n"
                 "__prog:\n"
@@ -51,6 +51,7 @@ prologue_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
             context_get(ctx, CTX_FUNCNAME, &func_name);
 
             const char *format =
+                "	bits	64\n"
                 "	extern	putchar\n"
                 "	extern	getchar\n"
                 "\n"
@@ -253,17 +254,17 @@ ptrdec_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
     }
     else
     {
-        const char *format =
+        format =
             "	movq	__cellptr(%%rip), %%rax\n"
             "	subq	$%ld, %%rax\n"
             "	movq	%%rax, __cellptr(%%rip)\n";
     }
 
     const size_t size = snprintf(NULL, 0, format, instr->arg);
-    uint8_t ptrinc[size + 1];
+    uint8_t ptrdec[size + 1];
 
-    snprintf(ptrinc, size + 1, format, instr->arg);
-    bytebuffer_writes(buf, ptrinc, size);
+    snprintf(ptrdec, size + 1, format, instr->arg);
+    bytebuffer_writes(buf, ptrdec, size);
 
     return true;
 }
@@ -342,10 +343,10 @@ celdec_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
     }
 
     const size_t size = snprintf(NULL, 0, format, instr->arg);
-    uint8_t celinc[size + 1];
+    uint8_t celdec[size + 1];
 
-    snprintf(celinc, size + 1, format, instr->arg);
-    bytebuffer_writes(buf, celinc, size);
+    snprintf(celdec, size + 1, format, instr->arg);
+    bytebuffer_writes(buf, celdec, size);
 
     return true;
 }
@@ -496,7 +497,7 @@ jmpbeg_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
             ".L%u:\n"
             "	mov	rax, [rel __cellptr]\n"
             "	mov	al, BYTE [rax]\n"
-            "	test	al, al\n\n"
+            "	test	al, al\n"
             "	je	.L%u\n";
     }
     else
@@ -505,7 +506,7 @@ jmpbeg_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
             ".L%u:\n"
             "	movq	__cellptr(%%rip), %%rax\n"
             "	movb	(%%rax), %%al\n"
-            "	testb	%%al, %%al\n\n"
+            "	testb	%%al, %%al\n"
             "	je	.L%u\n";
     }
 
