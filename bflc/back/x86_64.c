@@ -26,6 +26,7 @@ prologue_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
         if (intel_bin && (f_write || f_read))
         {
             error_node(err, "Binary output can use only syscalls", NULL);
+            return false;
         }
 
         if (intel_bin)
@@ -198,7 +199,7 @@ ptrinc_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
     if (instr->arg < 0)
     {
         error_node(err, "Invalid instruction argument", instr);
-        return false;
+        return true;
     }
 
     bool intel;
@@ -237,7 +238,7 @@ ptrdec_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
     if (instr->arg < 0)
     {
         error_node(err, "Invalid instruction argument", instr);
-        return false;
+        return true;
     }
 
     bool intel;
@@ -276,7 +277,7 @@ celinc_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
     if (instr->arg < 0)
     {
         error_node(err, "Invalid instruction argument", instr);
-        return false;
+        return true;
     }
 
     bool intel;
@@ -317,7 +318,7 @@ celdec_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
     if (instr->arg < 0)
     {
         error_node(err, "Invalid instruction argument", instr);
-        return false;
+        return true;
     }
 
     bool intel;
