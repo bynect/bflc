@@ -41,3 +41,33 @@ error_free(error_t *err)
         free(node);
     }
 }
+
+bool
+error_success(const error_t *err)
+{
+    return err->pretty != NULL && err->instr != NULL;
+}
+
+void
+error_dump(const error_t *err)
+{
+    if (error_success(err))
+    {
+        return false;
+    }
+
+    for (error_t *node = err; node != NULL; node = node->next)
+    {
+        if (node->instr != NULL)
+        {
+            printf("%s on instr {", node->pretty);
+            instr_print(node->instr);
+            printf("}\n");
+        }
+        else
+        {
+            printf("%s\n", node->pretty);
+        }
+    }
+    return true;
+}
