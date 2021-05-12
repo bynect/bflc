@@ -36,4 +36,8 @@ void ir_node(ir_t *ir, uint8_t instr, intptr_t arg, pos_t pos);
 
 void ir_free(ir_t *ir);
 
+void instr_dump(const instr_t *instr);
+
+void ir_dump(const ir_t *ir);
+
 #endif
