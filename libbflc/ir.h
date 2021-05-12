@@ -38,6 +38,6 @@ void ir_free(ir_t *ir);
 
 void instr_dump(const instr_t *instr);
 
-void ir_dump(const ir_t *ir);
+uint32_t ir_dump(const ir_t *ir);
 
 #endif

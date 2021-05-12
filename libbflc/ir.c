@@ -62,12 +62,15 @@ instr_dump(const instr_t *instr)
     );
 }
 
-void
+uint32_t
 ir_dump(const ir_t *ir)
 {
+    uint32_t count = 0;
     for (instr_t *instr = ir->instrs; instr != NULL; instr = instr->next)
     {
         instr_dump(instr);
         printf("\n");
+        ++count;
     }
+    return count;
 }

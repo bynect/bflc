@@ -18,6 +18,6 @@ void error_free(error_t *err);
 
 bool error_success(const error_t *err);
 
-void error_dump(const error_t *err);
+uint32_t error_dump(const error_t *err);
 
 #endif
