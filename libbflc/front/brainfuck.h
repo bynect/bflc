@@ -1,5 +1,5 @@
-#ifndef BFLC_BRAINFUCK_H
-#define BFLC_BRAINFUCK_H
+#ifndef BFLC_FRONT_BRAINFUCK_H
+#define BFLC_FRONTBRAINFUCK_H
 
 #include "../ir.h"
 #include "../error.h"

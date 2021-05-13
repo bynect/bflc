@@ -1,5 +1,5 @@
-#ifndef BFLC_VALIDATION_H
-#define BFLC_VALIDATION_H
+#ifndef BFLC_MID_VALIDATION_H
+#define BFLC_MID_VALIDATION_H
 
 #include "../ir.h"
 #include "../error.h"

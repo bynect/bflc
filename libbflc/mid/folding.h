@@ -1,5 +1,5 @@
-#ifndef BFLC_FOLDING_H
-#define BFLC_FOLDING_H
+#ifndef BFLC_MID_FOLDING_H
+#define BFLC_MID_FOLDING_H
 
 #include "../ir.h"
 #include "../error.h"

@@ -1,5 +1,5 @@
-#ifndef BFLC_X86_64_H
-#define BFLC_X86_64_H
+#ifndef BFLC_BACK_X86_64_H
+#define BFLC_BACK_X86_64_H
 
 #include "../bytebuffer.h"
 #include "../ir.h"
