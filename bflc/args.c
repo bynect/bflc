@@ -14,6 +14,7 @@ args_parse(int argc, char **argv, args_t *args, error_t *err)
     args->back = NULL;
     args->validation = true;
     args->folding = true;
+    args->func_name = NULL;
     args->flavor = FLAVOR_GNUASM;
     args->cells = 30000;
     args->flags = 0;
@@ -139,6 +140,21 @@ args_parse(int argc, char **argv, args_t *args, error_t *err)
                     }
 
                     error_node(err, "Malformed cells specifier", NULL);
+                }
+                else if (!strncmp(arg + 2, "func-name", 9))
+                {
+                    if (args->front != NULL)
+                    {
+                        error_node(err, "Funcname alredy specified", NULL);
+                    }
+                    else if (arg[11] == '=')
+                    {
+                        args->func_name = arg + 12;
+                    }
+                    else
+                    {
+                        error_node(err, "Malformed func-name specifier", NULL);
+                    }
                 }
                 else
                 {
@@ -286,6 +302,22 @@ end:
     {
         error_node(err, "Missing backend file", NULL);
     }
+
+    if (args->func_name == NULL)
+    {
+        if (args->flags & FLAVOR_INTELBIN)
+        {
+            args->func_name = "__prog";
+        }
+        else if (args->flags & FLAG_LIBC)
+        {
+            args->func_name = "main";
+        }
+        else
+        {
+            error_node(err, "Missing func-name", NULL);
+        }
+    }
 }
 
 void
@@ -295,10 +327,12 @@ args_dump(const args_t *args)
     printf("\t\"exe\": %s,\n", args->exe);
     printf("\t\"out\": %s,\n", args->out);
     printf("\t\"in\": %s,\n", args->in);
+
     printf("\t\"front\": %s,\n", args->front);
     printf("\t\"back\": %s,\n", args->back);
     printf("\t\"validation\": %s,\n", args->validation ? "true" : "false");
     printf("\t\"folding\": %s,\n", args->folding ? "true" : "false");
+    printf("\t\"func-name\": %s,\n", args->func_name);
 
     printf("\t\"asm\": ");
     switch (args->flavor)
