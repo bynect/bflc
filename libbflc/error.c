@@ -1,4 +1,5 @@
 #include "error.h"
+#include "ir.h"
 
 #include <malloc.h>
 
@@ -54,12 +55,12 @@ error_dump(const error_t *err)
     uint32_t count = 0;
     if (err->pretty != NULL || err->instr != NULL)
     {
-        for (error_t *node = err; node != NULL; node = node->next)
+        for (const error_t *node = err; node != NULL; node = node->next)
         {
             if (node->instr != NULL)
             {
                 printf("%s on instr {", node->pretty);
-                instr_print(node->instr);
+                instr_dump(node->instr);
                 printf("}\n");
             }
             else

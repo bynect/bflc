@@ -56,7 +56,7 @@ instr_dump(const instr_t *instr)
     };
 
     printf(
-        "%d (%ld) [line %u; column %u; offset %zu]",
+        "%s (%ld) [line %u; column %u; offset %zu]",
         instrs[instr->instr - 1], instr->arg,
         instr->pos.line, instr->pos.column, instr->pos.offset
     );
