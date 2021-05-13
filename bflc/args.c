@@ -129,12 +129,11 @@ args_parse(int argc, char **argv, args_t *args, error_t *err)
                     if (arg[7] == '=')
                     {
                         char *ptr;
-                        size_t cells = strtoul(arg + 8, &ptr, 10);
+                        long long cells = strtoll(arg + 8, &ptr, 10);
 
-                        if (*ptr == '\0')
+                        if (*ptr == '\0' && cells >= 0)
                         {
                             args->cells = cells;
-                            printf("%zu\n", cells);
                             continue;
                         }
                     }
@@ -337,7 +336,6 @@ args_dump(const args_t *args)
         if (comma)
         {
             printf(", ");
-            comma = false;
         }
 
         printf("\"read\"");
@@ -349,7 +347,6 @@ args_dump(const args_t *args)
         if (comma)
         {
             printf(", ");
-            comma = false;
         }
 
         printf("\"libc\"");
@@ -361,7 +358,6 @@ args_dump(const args_t *args)
         if (comma)
         {
             printf(", ");
-            comma = false;
         }
 
         printf("\"wrap-cell\"");
@@ -373,7 +369,6 @@ args_dump(const args_t *args)
         if (comma)
         {
             printf(", ");
-            comma = false;
         }
         printf("\"wrap-ptr\"");
     }
