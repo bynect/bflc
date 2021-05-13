@@ -295,12 +295,12 @@ end:
 
     if (args->front == NULL)
     {
-        error_node(err, "Missing frontend file", NULL);
+        error_node(err, "Missing frontend name", NULL);
     }
 
     if (args->back == NULL)
     {
-        error_node(err, "Missing backend file", NULL);
+        error_node(err, "Missing backend name", NULL);
     }
 
     if (args->func_name == NULL)
