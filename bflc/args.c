@@ -88,15 +88,15 @@ args_parse(int argc, char **argv, args_t *args, error_t *err)
                         error_node(err, "Malformed frontend specifier", NULL);
                     }
                 }
-                else if (!strncmp(arg + 2, "back", 5))
+                else if (!strncmp(arg + 2, "back", 4))
                 {
                     if (args->back != NULL)
                     {
                         error_node(err, "Backend alredy specified", NULL);
                     }
-                    else if (arg[7] == '=')
+                    else if (arg[6] == '=')
                     {
-                        args->back = arg + 8;
+                        args->back = arg + 7;
                     }
                     else
                     {
@@ -254,7 +254,7 @@ args_parse(int argc, char **argv, args_t *args, error_t *err)
                     }
                     else
                     {
-                        args->out = argv[i + 1];
+                        args->out = argv[++i];
                     }
                 }
                 else
