@@ -8,7 +8,6 @@ main(int argc, char **argv)
     error_t err = {NULL, NULL};
 
     args_parse(argc, argv, &args, &err);
-    args_dump(&args);
     if (!error_success(&err))
     {
         error_dump(&err);
