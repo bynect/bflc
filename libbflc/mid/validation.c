@@ -25,7 +25,7 @@ pass_validation(context_t *ctx, ir_t *ir)
                 if (cellptr == cellmax && !wrap_ptr)
                 {
                     error_node(
-                        &err, "Cell pointer out of lower bounds", instr
+                        &err, "Cell pointer out of upper bounds", instr
                     );
                 }
                 else
@@ -38,7 +38,7 @@ pass_validation(context_t *ctx, ir_t *ir)
                 if (cellptr == 0 && !wrap_ptr)
                 {
                     error_node(
-                        &err, "Cell pointer out of upper bounds", instr
+                        &err, "Cell pointer out of lower bounds", instr
                     );
                 }
                 else

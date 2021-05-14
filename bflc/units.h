@@ -22,7 +22,7 @@ typedef struct {
 } frontend_t;
 
 #define MAX_BACKENDS 1
-#define MAX_FRONTENDS 1
+#define MAX_FRONTENDS 2
 
 extern const backend_t backends[];
 extern const frontend_t frontends[];
