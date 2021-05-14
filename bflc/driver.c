@@ -10,13 +10,21 @@
 #include <stdio.h>
 #include <malloc.h>
 
+#if defined _WIN32 || defined _WIN64
+#   define WIN32_LEAN_AND_MEAN
+#   include <windows.h>
+#   define strcasecmp stricmp
+#else
+#   include <strings.h>
+#endif
+
 int
 driver_main(context_t *ctx, args_t *args)
 {
     const frontend_t *front = NULL;
     for (uint32_t i = 0; i < MAX_FRONTENDS; ++i)
     {
-        if (!strcmp(args->front, frontends[i].name))
+        if (!strcasecmp(args->front, frontends[i].name))
         {
             front = frontends + i;
             break;
@@ -31,7 +39,7 @@ driver_main(context_t *ctx, args_t *args)
     const backend_t *back = NULL;
     for (uint32_t i = 0; i < MAX_BACKENDS; ++i)
     {
-        if (!strcmp(args->back, backends[i].name))
+        if (!strcasecmp(args->back, backends[i].name))
         {
             back = backends + i;
             break;
