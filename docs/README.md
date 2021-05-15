@@ -19,6 +19,8 @@ This will create both a static and a dynamic version of the
 
 ## Design
 
+![units](/docs/units.svg)
+
 The framework is made of many component, which we call **unit**,
 which can be a backend, a frontend or a middle pass.
 Adding new units is easy thanks to the modular structure of the project.
