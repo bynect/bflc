@@ -66,7 +66,7 @@ As of today the following units are available.
 
 - x86_64
   - Assembly output in GAS syntax.
-  - Assembly output in Intel (Nasm) syntax.
+  - Assembly output in Intel Nasm syntax.
   - Assembly output compatible with Nasm `-fbin` option.
 
 ### Frontends
@@ -88,17 +88,31 @@ As of today the following units are available.
 ### Planned units
 
 An assembly backend for x86 is being actively developed.
-
 A pseudo-backend for the [Graphviz Dot][graphviz-dot] language is planned.
+Machine code output for backends will be added in the future.
 
 Frontends for other Brainfuck-like languages are planned.
 
-Machine code output for backends will be added in the future.
+## Compiler usage
+
+The [reference compiler](./bflc "bflc") requires a lot of flags to be passed.
+
+```sh
+    bflc --front=Brainfuck --back=x86_64 myfile.bf -o outfile.asm
+```
+
+This will compile a Brainfuck input file `myfile.bf` to x86_64 assembly
+in Intel Nasm syntax and store it in `outfile.asm`.
+
+GAS assembly syntax is set by default.
+The Validation and Folding passes are enabled by default.
+`flibc` is set when neither `fwrite` or `fread` are set.
 
 ## Contributing
 
 Contributions are welcome.
 Please open an issue first for major changes.
+
 Before opening a pull request please check for memory leaks, errors and
 other memory problems with either [Asan][asan] or [Valgrind][valgrind].
 
