@@ -1,6 +1,6 @@
-*
-!bflc/**
-!libblfc/**
+/*
+!docs/
+!libbflc/
+!bflc/
 !CMakeLists.txt
-!LICENSE
-!REAMDE.md
+!.gitignore

@@ -14,8 +14,8 @@ The Brain Fuck Like Compiler (bflc) is a compiler framework that targets
 ```
 
 This will create both a static and a dynamic version of the
-[bflc library](./libbflc "libbflc"), and the reference
-[bflc compiler](./bflc "bflc") implementation.
+[bflc library](/libbflc "libbflc"), and the reference
+[bflc compiler](/bflc "bflc") implementation.
 
 ## Design
 
@@ -108,6 +108,11 @@ in Intel Nasm syntax and store it in `outfile.asm`.
 GAS assembly syntax is set by default.
 The Validation and Folding passes are enabled by default.
 `flibc` is set when neither `fwrite` or `fread` are set.
+
+## History
+
+A very early and incomplete implementation of the project can be found on the
+`early` branch of this repository.
 
 ## Contributing
 
