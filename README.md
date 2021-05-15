@@ -95,7 +95,8 @@ Frontends for other Brainfuck-like languages are planned.
 
 ## Compiler usage
 
-The [reference compiler](./bflc "bflc") requires a lot of flags to be passed.
+The [reference compiler](./bflc "bflc") requires a lot of flags to be passed,
+because it can be used with multiple frontend and backend.
 
 ```sh
     bflc --front=Brainfuck --back=x86_64 myfile.bf -o outfile.asm
