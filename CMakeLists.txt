@@ -13,7 +13,6 @@ set_property(TARGET bflc_obj PROPERTY POSITION_INDEPENDENT_CODE 1)
 add_library(bflc_shared SHARED $<TARGET_OBJECTS:bflc_obj>)
 add_library(bflc_static STATIC $<TARGET_OBJECTS:bflc_obj>)
 
-
 set(BIN_DIRECTORY bflc)
 aux_source_directory(${BIN_DIRECTORY} BIN_SOURCES)
 add_executable(bflc ${BIN_SOURCES})

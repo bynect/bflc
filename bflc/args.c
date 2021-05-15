@@ -303,6 +303,14 @@ end:
         error_node(err, "Missing backend name", NULL);
     }
 
+    if (!(args->flags & FLAG_LIBC))
+    {
+        if (!((args->flags & FLAG_WRITE) && (args->flags & FLAG_READ)))
+        {
+            args->flags |= FLAG_LIBC;
+        }
+    }
+
     if (args->func_name == NULL)
     {
         if (args->flags & FLAVOR_INTELBIN)
