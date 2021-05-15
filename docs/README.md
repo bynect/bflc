@@ -95,7 +95,7 @@ Frontends for other Brainfuck-like languages are planned.
 
 ## Compiler usage
 
-The [reference compiler](./bflc "bflc") requires a lot of flags to be passed,
+The [reference compiler](/bflc "bflc") requires a lot of flags to be passed,
 because it can be used with multiple frontend and backend.
 
 ```sh
@@ -113,6 +113,12 @@ The Validation and Folding passes are enabled by default.
 
 A very early and incomplete implementation of the project can be found on the
 `early` branch of this repository.
+
+### Motivation
+
+Why this project was created?
+
+![motivation](/docs/motive.svg)
 
 ## Contributing
 
