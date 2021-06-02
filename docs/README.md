@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Brain Fuck Like Compiler (bflc) is a compiler framework that targets
+The Brain Fuck Languages Compiler (bflc) is a compiler framework that targets
 [Brainfuck][bf-wikipedia] and closely [related languages](bf-family).
 
 ## Installation
@@ -17,7 +17,7 @@ This will create both a static and a dynamic version of the
 [bflc library](/libbflc "libbflc"), and the reference
 [bflc compiler](/bflc "bflc") implementation.
 
-## Design
+## Design and API
 
 ![units](/docs/units.svg)
 
@@ -70,6 +70,7 @@ As of today the following units are available.
   - Assembly output in GAS syntax.
   - Assembly output in Intel Nasm syntax.
   - Assembly output compatible with Nasm `-fbin` option.
+  - Machine code output for jit.
 
 ### Frontends
 
