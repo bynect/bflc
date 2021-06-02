@@ -18,3 +18,7 @@ aux_source_directory(${BIN_DIRECTORY} BIN_SOURCES)
 add_executable(bflc ${BIN_SOURCES})
 target_link_libraries(bflc PRIVATE bflc_static)
 target_include_directories(bflc PRIVATE ${LIB_DIRECTORY})
+
+add_executable(jit_example docs/jit_example.c)
+target_link_libraries(jit_example PRIVATE bflc_static)
+target_include_directories(jit_example PRIVATE ${LIB_DIRECTORY})
