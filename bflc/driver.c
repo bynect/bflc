@@ -1,6 +1,5 @@
 #include "driver.h"
 #include "units.h"
-#include "error.h"
 #include "bytebuffer.h"
 #include "ir.h"
 #include "mid/folding.h"

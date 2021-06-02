@@ -3,7 +3,6 @@
 
 #include "bytebuffer.h"
 #include "ir.h"
-#include "error.h"
 #include "context.h"
 
 typedef error_t (*emit_fn)(context_t *ctx, bytebuffer_t *buf, ir_t *ir);

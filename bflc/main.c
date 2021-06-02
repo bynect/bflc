@@ -1,5 +1,5 @@
-#include "args.h"
 #include "driver.h"
+#include "args.h"
 
 int
 main(int argc, char **argv)
