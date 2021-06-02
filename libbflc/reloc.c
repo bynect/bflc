@@ -36,7 +36,8 @@ reloc_reset(reloc_t *reloc, size_t min)
 void
 reloc_write(reloc_t *reloc, uint8_t type, uint32_t off)
 {
-    if (reloc->off_pos + 1 >= reloc->off_len)
+    size_t off_pos = (reloc->off_pos + 1) * sizeof(*reloc->offs);
+    if (off_pos + 1 >= reloc->off_len)
     {
         reloc->off_len += RELOC_BLOCK * sizeof(*reloc->offs);
         reloc->offs = realloc(reloc->offs, reloc->off_len);
