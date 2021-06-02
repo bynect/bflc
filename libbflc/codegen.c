@@ -7,8 +7,12 @@ codegen_run(context_t *ctx, codegen_t *codegen, bytebuffer_t *buf, ir_t *ir)
     error_init(&err, NULL, NULL);
 
     bytebuffer_reset(buf, BYTEBUFFER_BLOCK);
+    bool run = true;
 
-    bool run = codegen->prologue_fn(ctx, buf, NULL, &err, codegen->extra);
+    if (codegen->prologue_fn)
+    {
+        run = codegen->prologue_fn(ctx, buf, NULL, &err, codegen->extra);
+    }
 
     for (instr_t *instr = ir->instrs; instr != NULL; instr = instr->next)
     {
@@ -73,7 +77,10 @@ codegen_run(context_t *ctx, codegen_t *codegen, bytebuffer_t *buf, ir_t *ir)
         }
     }
 
-    codegen->epilogue_fn(ctx, buf, NULL, &err, codegen->extra);
+    if (codegen->epilogue_fn)
+    {
+        codegen->epilogue_fn(ctx, buf, NULL, &err, codegen->extra);
+    }
 
     return err;
 }

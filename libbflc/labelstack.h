@@ -16,6 +16,8 @@ typedef struct {
 
 void labelstack_init(labelstack_t *labelstack, size_t min);
 
+void labelstack_reset(labelstack_t *labelstack, size_t min);
+
 void labelstack_push(labelstack_t *labelstack, uint32_t label);
 
 bool labelstack_pop(labelstack_t *labelstack, uint32_t *label);

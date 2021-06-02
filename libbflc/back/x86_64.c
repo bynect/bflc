@@ -1,6 +1,7 @@
 #include "x86_64.h"
 #include "../codegen.h"
 #include "../labelstack.h"
+#include "../reloc.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -23,7 +24,7 @@ prologue_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
         bool f_read;
         context_get(ctx, CTX_FREAD, &f_read);
 
-        if (intel_bin && (f_write || f_read))
+        if (intel_bin && !(f_write && f_read))
         {
             error_node(err, "Binary output can use only syscalls", NULL);
             return false;
@@ -573,10 +574,209 @@ emit_asm_x86_64(context_t *ctx, bytebuffer_t *buf, ir_t *ir)
     return err;
 }
 
+static void
+addr_patch_mach_x86_64(bytebuffer_t *buf, uint32_t base,
+                        uint8_t type, uint32_t off, void *extra)
+{
+    uint32_t addr = base - (off + 7); // pc off
+
+    const uint8_t offs[4] = {0,8,16,24};
+    const uint8_t off_max = off + 8;
+
+    for (uint32_t i = off, j = 0; j < 4 && i < off_max; ++i)
+    {
+        // 0xaf placeholder
+        if (buf->bytes[i] == 0xaf)
+        {
+            buf->bytes[i] = (uint8_t)(addr >> offs[j]);
+            ++j;
+        }
+    }
+}
+
+static bool
+prologue_mach_x86_64(context_t *ctx, bytebuffer_t *buf,
+                    instr_t *instr, error_t *err, void *extra)
+{
+    bool f_write;
+    context_get(ctx, CTX_FWRITE, &f_write);
+
+    bool f_read;
+    context_get(ctx, CTX_FREAD, &f_read);
+
+    if (!(f_write && f_read))
+    {
+        error_node(err, "Binary output can use only syscalls", NULL);
+        return false;
+    }
+
+    const uint8_t prologue[] = {
+        0x55, // pushq %rbp
+        0x48, 0x89, 0xe5, // movq %rsp, %rbp
+        0x48, 0x8d, 0x05, 0xaf, 0xaf, 0xaf, 0xaf, // leaq cellmem(%rip), %rax
+        0x48, 0x89, 0x05, 0xaf, 0xaf, 0xaf, 0xaf // movq %rax, cellptr(%rip)
+    };
+    bytebuffer_writes(buf, prologue, sizeof(prologue));
+
+    reloc_t *reloc = extra;
+    reloc_write(reloc, RELOC_PATCH_MEM, 4);
+    reloc_write(reloc, RELOC_PATCH_PTR, 11);
+
+    return true;
+}
+
+static bool
+epilogue_mach_x86_64(context_t *ctx, bytebuffer_t *buf,
+                    instr_t *instr, error_t *err, void *extra)
+{
+    const uint8_t epilogue[] = {
+        0xb8, 0x00, 0x00, 0x00, 0x00,// movq $0, %eax
+        0x5d, // popq %rbp
+        0xc3 // ret
+    };
+    bytebuffer_writes(buf, epilogue, sizeof(epilogue));
+
+    while ((buf->pos % 16) != 0)
+    {
+        bytebuffer_write(buf, 0x90); // pad
+    }
+
+    uint32_t cellmem = buf->pos;
+
+    size_t cells;
+    context_get(ctx, CTX_CELLS, &cells);
+
+    while (cells--)
+    {
+        bytebuffer_write(buf, 0x00);
+    }
+
+    while ((buf->pos % 32) != 0)
+    {
+        bytebuffer_write(buf, 0x90); // pad
+    }
+
+    uint32_t cellptr = buf->pos;
+
+    uint8_t ptr[8] = {0};
+    bytebuffer_writes(buf, ptr, sizeof(ptr));
+
+    reloc_t *reloc = extra;
+    reloc_patch(
+        reloc, buf, cellmem, cellptr, addr_patch_mach_x86_64, NULL
+    );
+
+    return true;
+}
+
+static bool
+instr_mach_x86_64(context_t *ctx, bytebuffer_t *buf,
+                instr_t *instr, error_t *err, void *extra)
+{
+    reloc_t *reloc = extra;
+
+    uint8_t ptrbin[] = {
+        0x48, 0x8b, 0x05, 0xaf, 0xaf, 0xaf, 0xaf, // movq __cellptr(%rip), %rax
+        0x48, 0x83, 0x00, 0x00, // op $arg, %rax
+        0x48, 0x89, 0x05, 0xaf, 0xaf, 0xaf, 0xaf // movq %rax, __cellptr(%rip)
+    };
+
+    uint8_t celbin[] = {
+        0x48, 0x8b, 0x05, 0xaf, 0xaf, 0xaf, 0xaf, // movq __cellptr(%rip), %rax
+        0x0f, 0xb6, 0x10, // movzbl (%rax), %edx
+        0x83, 0x00, 0x00, // op $arg, %edx
+        0x88, 0x10 // movb %dl, (%rax)
+    };
+
+    uint8_t sysbin[] = {
+        0xb8, 0x00, 0x00, 0x00, 0x00, // movl $arg, %eax
+        0xbf, 0x00, 0x00, 0x00, 0x00, // movl $fd, %edi
+        0x48, 0x8b, 0x35, 0xaf, 0xaf, 0xaf, 0xaf, // movq __cellptr(%rip), %rsi
+        0xba, 0x01, 0x00, 0x00, 0x00, // movl $1, %edx
+        0x0f, 0x05 // syscall
+    };
+
+    switch (instr->instr)
+    {
+        case INSTR_PTRINC:
+            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 0);
+            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 11);
+
+            ptrbin[9] = 0xc0; // add
+            ptrbin[10] = instr->arg; // imm
+            bytebuffer_writes(buf, ptrbin, sizeof(ptrbin));
+            break;
+
+        case INSTR_PTRDEC:
+            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 0);
+            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 11);
+
+            ptrbin[9] = 0xe8; // sub
+            ptrbin[10] = instr->arg; // imm
+            bytebuffer_writes(buf, ptrbin, sizeof(ptrbin));
+            break;
+
+        case INSTR_CELINC:
+            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 0);
+
+            celbin[11] = 0xc2; // add
+            celbin[12] = instr->arg; // imm
+            bytebuffer_writes(buf, celbin, sizeof(celbin));
+            break;
+
+        case INSTR_CELDEC:
+            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 0);
+
+            celbin[11] = 0xea; // sub
+            celbin[12] = instr->arg; // imm
+            bytebuffer_writes(buf, celbin, sizeof(celbin));
+            break;
+
+        case INSTR_OUTPUT:
+            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 10);
+
+            sysbin[1] = 0x01; // write
+            sysbin[6] = 0x01; // stdout
+            bytebuffer_writes(buf, sysbin, sizeof(sysbin));
+            break;
+
+        case INSTR_INPUT:
+            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 10);
+
+            sysbin[1] = 0x00; // read
+            sysbin[6] = 0x00; // stdin
+            bytebuffer_writes(buf, sysbin, sizeof(sysbin));
+            break;
+
+        default:
+            error_node(err, "Not implemented", instr);
+            return false;
+    }
+
+    return true;
+}
+
 error_t
 emit_mach_x86_64(context_t *ctx, bytebuffer_t *buf, ir_t *ir)
 {
-    error_t err;
-    error_init(&err, NULL, NULL);
+    reloc_t reloc;
+    reloc_init(&reloc, RELOC_BLOCK);
+
+    codegen_t codegen;
+    codegen.prologue_fn = prologue_mach_x86_64;
+    codegen.epilogue_fn = epilogue_mach_x86_64;
+    codegen.ptrinc_fn = instr_mach_x86_64;
+    codegen.ptrdec_fn = instr_mach_x86_64;
+    codegen.celinc_fn = instr_mach_x86_64;
+    codegen.celdec_fn = instr_mach_x86_64;
+    codegen.output_fn = instr_mach_x86_64;
+    codegen.input_fn = instr_mach_x86_64;
+    codegen.jmpbeg_fn = instr_mach_x86_64;
+    codegen.jmpend_fn = instr_mach_x86_64;
+    codegen.extra = &reloc;
+
+    error_t err = codegen_run(ctx, &codegen, buf, ir);
+    reloc_free(&reloc);
+
     return err;
 }
