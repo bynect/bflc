@@ -35,7 +35,7 @@ bytebuffer_write(bytebuffer_t *buf, uint8_t byte)
 {
     if (buf->pos + 1 >= buf->len)
     {
-        buf->len += BYTEBUFFER_BLOCK;
+        buf->len *= 2;
         buf->bytes = realloc(buf->bytes, buf->len);
     }
 
@@ -47,7 +47,8 @@ bytebuffer_writes(bytebuffer_t *buf, const uint8_t *bytes, size_t len)
 {
     if (buf->pos + len >= buf->len)
     {
-        buf->len += len + BYTEBUFFER_BLOCK;
+        buf->len *= 2;
+        buf->len += len;
         buf->bytes = realloc(buf->bytes, buf->len);
     }
 

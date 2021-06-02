@@ -4,7 +4,7 @@
 #include "labelstack.h"
 #include "bytebuffer.h"
 
-#define RELOC_BLOCK 32
+#define RELOC_BLOCK 64
 
 #define RELOC_PATCH_MEM 1
 #define RELOC_PATCH_PTR 2

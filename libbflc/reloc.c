@@ -7,6 +7,7 @@ reloc_init(reloc_t *reloc, size_t min)
 {
     labelstack_init(&reloc->labelstack, LABELSTACK_BLOCK);
     min *= sizeof(*(reloc->offs));
+
     reloc->offs = malloc(min);
     reloc->off_len = min;
     reloc->off_pos = 0;
@@ -17,6 +18,7 @@ reloc_reset(reloc_t *reloc, size_t min)
 {
     labelstack_reset(&reloc->labelstack, LABELSTACK_BLOCK);
     min *= sizeof(*reloc->offs);
+
     if (reloc->offs != NULL)
     {
         if (reloc->off_len < min)
@@ -37,7 +39,7 @@ void
 reloc_write(reloc_t *reloc, uint8_t type, uint32_t off)
 {
     size_t off_pos = (reloc->off_pos + 1) * sizeof(*reloc->offs);
-    if (off_pos + 1 >= reloc->off_len)
+    if (off_pos >= reloc->off_len)
     {
         reloc->off_len += RELOC_BLOCK * sizeof(*reloc->offs);
         reloc->offs = realloc(reloc->offs, reloc->off_len);
