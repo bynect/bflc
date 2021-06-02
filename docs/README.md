@@ -70,7 +70,7 @@ As of today the following units are available.
   - Assembly output in GAS syntax.
   - Assembly output in Intel Nasm syntax.
   - Assembly output compatible with Nasm `-fbin` option.
-  - Machine code output for jit.
+  - Machine code output compatible with jit.
 
 ### Frontends
 
@@ -95,6 +95,12 @@ A pseudo-backend for the [Graphviz Dot][graphviz-dot] language is planned.
 Machine code output for backends will be added in the future.
 
 Frontends for other Brainfuck-like languages are planned.
+
+## JIT integration
+
+Units may provide a machine code generation alongside asm generation.
+Integrating such code generator in a JIT should be quite straightforward,
+and an [integration example](/docs/jit_example.c) is also available.
 
 ## Compiler usage
 
