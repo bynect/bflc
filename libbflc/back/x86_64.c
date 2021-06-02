@@ -580,18 +580,10 @@ addr_patch_mach_x86_64(bytebuffer_t *buf, uint32_t base,
 {
     uint32_t addr = base - (off + 7); // pc off
 
-    const uint8_t offs[4] = {0,8,16,24};
-    const uint8_t off_max = off + 8;
-
-    for (uint32_t i = off, j = 0; j < 4 && i < off_max; ++i)
-    {
-        // 0xaf placeholder
-        if (buf->bytes[i] == 0xaf)
-        {
-            buf->bytes[i] = (uint8_t)(addr >> offs[j]);
-            ++j;
-        }
-    }
+    buf->bytes[off + 0] = (uint8_t)(addr >> 0);
+    buf->bytes[off + 1] = (uint8_t)(addr >> 8);
+    buf->bytes[off + 2] = (uint8_t)(addr >> 16);
+    buf->bytes[off + 3] = (uint8_t)(addr >> 24);
 }
 
 static bool
@@ -619,8 +611,8 @@ prologue_mach_x86_64(context_t *ctx, bytebuffer_t *buf,
     bytebuffer_writes(buf, prologue, sizeof(prologue));
 
     reloc_t *reloc = extra;
-    reloc_write(reloc, RELOC_PATCH_MEM, 4);
-    reloc_write(reloc, RELOC_PATCH_PTR, 11);
+    reloc_write(reloc, RELOC_PATCH_MEM, 7);
+    reloc_write(reloc, RELOC_PATCH_PTR, 14);
 
     return true;
 }
@@ -641,7 +633,7 @@ epilogue_mach_x86_64(context_t *ctx, bytebuffer_t *buf,
         bytebuffer_write(buf, 0x90); // pad
     }
 
-    uint32_t cellmem = buf->pos;
+    uint32_t cellmem = buf->pos + 3;
 
     size_t cells;
     context_get(ctx, CTX_CELLS, &cells);
@@ -656,7 +648,7 @@ epilogue_mach_x86_64(context_t *ctx, bytebuffer_t *buf,
         bytebuffer_write(buf, 0x90); // pad
     }
 
-    uint32_t cellptr = buf->pos;
+    uint32_t cellptr = buf->pos + 3;
 
     uint8_t ptr[8] = {0};
     bytebuffer_writes(buf, ptr, sizeof(ptr));
@@ -674,6 +666,7 @@ instr_mach_x86_64(context_t *ctx, bytebuffer_t *buf,
                 instr_t *instr, error_t *err, void *extra)
 {
     reloc_t *reloc = extra;
+    uint32_t addr = 0;
 
     uint8_t ptrbin[] = {
         0x48, 0x8b, 0x05, 0xaf, 0xaf, 0xaf, 0xaf, // movq __cellptr(%rip), %rax
@@ -696,11 +689,18 @@ instr_mach_x86_64(context_t *ctx, bytebuffer_t *buf,
         0x0f, 0x05 // syscall
     };
 
+    const uint8_t jmpbin[] = {
+        0x48, 0x8b, 0x05, 0xaf, 0xaf, 0xaf, 0xaf, // movq __cellptr(%rip), %rax
+        0x8a, 0x00, // movb (%rax), %al
+        0x84, 0xc0, // testb %al, %al
+        0x0f, 0x84, 0xaf, 0xaf, 0xaf, 0xaf // je addr
+    };
+
     switch (instr->instr)
     {
         case INSTR_PTRINC:
-            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 0);
-            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 11);
+            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 3);
+            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 14);
 
             ptrbin[9] = 0xc0; // add
             ptrbin[10] = instr->arg; // imm
@@ -708,8 +708,8 @@ instr_mach_x86_64(context_t *ctx, bytebuffer_t *buf,
             break;
 
         case INSTR_PTRDEC:
-            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 0);
-            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 11);
+            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 3);
+            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 14);
 
             ptrbin[9] = 0xe8; // sub
             ptrbin[10] = instr->arg; // imm
@@ -717,7 +717,7 @@ instr_mach_x86_64(context_t *ctx, bytebuffer_t *buf,
             break;
 
         case INSTR_CELINC:
-            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 0);
+            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 3);
 
             celbin[11] = 0xc2; // add
             celbin[12] = instr->arg; // imm
@@ -725,7 +725,7 @@ instr_mach_x86_64(context_t *ctx, bytebuffer_t *buf,
             break;
 
         case INSTR_CELDEC:
-            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 0);
+            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 3);
 
             celbin[11] = 0xea; // sub
             celbin[12] = instr->arg; // imm
@@ -733,7 +733,7 @@ instr_mach_x86_64(context_t *ctx, bytebuffer_t *buf,
             break;
 
         case INSTR_OUTPUT:
-            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 10);
+            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 13);
 
             sysbin[1] = 0x01; // write
             sysbin[6] = 0x01; // stdout
@@ -741,15 +741,40 @@ instr_mach_x86_64(context_t *ctx, bytebuffer_t *buf,
             break;
 
         case INSTR_INPUT:
-            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 10);
+            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 13);
 
             sysbin[1] = 0x00; // read
             sysbin[6] = 0x00; // stdin
             bytebuffer_writes(buf, sysbin, sizeof(sysbin));
             break;
 
+        case INSTR_JMPBEG:
+            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 3);
+
+            addr = buf->pos;
+            bytebuffer_writes(buf, jmpbin, sizeof(jmpbin));
+
+            labelstack_push(&reloc->labelstack, addr);
+            break;
+
+        case INSTR_JMPEND:
+            labelstack_pop(&reloc->labelstack, &addr);
+            int32_t off = -(buf->pos + 5 - addr);
+
+            bytebuffer_write(buf, 0xe9); // jmp addr
+            bytebuffer_write(buf, (uint8_t)(off >> 0));
+            bytebuffer_write(buf, (uint8_t)(off >> 8));
+            bytebuffer_write(buf, (uint8_t)(off >> 16));
+            bytebuffer_write(buf, (uint8_t)(off >> 24));
+
+            off = buf->pos - (addr + sizeof(jmpbin));
+            buf->bytes[addr + 13] = (uint8_t)(off >> 0);
+            buf->bytes[addr + 14] = (uint8_t)(off >> 8);
+            buf->bytes[addr + 15] = (uint8_t)(off >> 16);
+            buf->bytes[addr + 16] = (uint8_t)(off >> 24);
+            break;
+
         default:
-            error_node(err, "Not implemented", instr);
             return false;
     }
 
