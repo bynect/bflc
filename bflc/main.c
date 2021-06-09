@@ -16,31 +16,13 @@
 
 #include "driver.h"
 #include "args.h"
-
-#include <malloc.h>
-
-void *
-malloc_wrap(size_t size, void *extra)
-{
-    return malloc(size);
-}
-
-void *
-realloc_wrap(void *ptr, size_t prev, size_t size, void *extra)
-{
-    return realloc(ptr, size);
-}
-
-void
-free_wrap(void *ptr, size_t prev, void *extra)
-{
-    free(ptr);
-}
+#include "libbflc/mem.h"
 
 int
 main(int argc, const char **argv)
 {
-    mem_t mem = {malloc_wrap, realloc_wrap, free_wrap, NULL};
+    mem_t mem;
+    mem_default(&mem);
     context_t *ctx = context_new(&mem);
 
     args_t args;

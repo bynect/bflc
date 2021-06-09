@@ -17,8 +17,6 @@
 #ifndef BFLC_MEM_H
 #define BFLC_MEM_H
 
-#include "context.h"
-
 #include <stdint.h>
 #include <stddef.h>
 
@@ -36,5 +34,7 @@ typedef struct {
     mem_free_fn free_fn;
     void *extra;
 } mem_t;
+
+void mem_default(mem_t *mem);
 
 #endif

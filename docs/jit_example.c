@@ -29,24 +29,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-void *
-malloc_wrap(size_t size, void *extra)
-{
-    return malloc(size);
-}
-
-void *
-realloc_wrap(void *ptr, size_t prev, size_t size, void *extra)
-{
-    return realloc(ptr, size);
-}
-
-void
-free_wrap(void *ptr, size_t prev, void *extra)
-{
-    free(ptr);
-}
-
 int
 jit_execute(bytebuffer_t *buf)
 {
@@ -116,7 +98,8 @@ main(int argc, const char **argv)
     fread(src, 1, size, file);
     fclose(file);
 
-    mem_t mem = {malloc_wrap, realloc_wrap, free_wrap, NULL};
+    mem_t mem;
+    mem_default(&mem);
     context_t *ctx = context_new(&mem);
 
     size_t cells = 30000;
