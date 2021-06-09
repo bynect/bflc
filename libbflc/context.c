@@ -156,6 +156,18 @@ context_get(context_t *ctx, uint8_t option, void *value)
 }
 
 void
+context_set_mem(context_t *ctx, mem_t *mem)
+{
+    ctx->mem = mem;
+}
+
+mem_t *
+context_get_mem(context_t *ctx)
+{
+    return ctx->mem;
+}
+
+void
 context_free(context_t *ctx)
 {
     ctx->mem->free_fn(ctx, sizeof(context_t), ctx->mem->free_fn);

@@ -16,7 +16,6 @@
 
 #include "driver.h"
 #include "args.h"
-#include "libbflc/mem.h"
 
 int
 main(int argc, const char **argv)

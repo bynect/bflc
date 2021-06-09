@@ -65,6 +65,10 @@ bool context_set(context_t *ctx, uint8_t option, void *value);
 
 bool context_get(context_t *ctx, uint8_t option, void *value);
 
+void context_set_mem(context_t *ctx, mem_t *mem);
+
+mem_t *context_get_mem(context_t *ctx);
+
 void context_free(context_t *ctx);
 
 #endif
