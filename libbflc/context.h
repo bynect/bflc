@@ -17,6 +17,8 @@
 #ifndef BFLC_CONTEXT_H
 #define BFLC_CONTEXT_H
 
+#include "mem.h"
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -33,11 +35,31 @@
 #define CTX_INTELBIN 11
 #define CTX_EXTRA 12
 
+#ifdef BFLC_INTERNAL
+
+struct context {
+    bool f_write;
+    bool f_read;
+    bool f_libc;
+    bool f_wrap;
+    bool f_wrap_ptr;
+    bool o_asm;
+    bool o_mach;
+    size_t cells;
+    char *func_name;
+    bool intel_asm;
+    bool intel_bin;
+    void *extra;
+    mem_t *mem;
+};
+
+#endif
+
 typedef struct context context_t;
 
-context_t *context_new(void);
+context_t *context_new(mem_t *mem);
 
-void context_reset(context_t *ctx);
+void context_reset(context_t *ctx, mem_t *mem);
 
 bool context_set(context_t *ctx, uint8_t option, void *value);
 

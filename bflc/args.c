@@ -5,7 +5,8 @@
 #include <stdio.h>
 
 void
-args_parse(int argc, char **argv, args_t *args, error_t *err)
+args_parse(context_t *ctx, int argc, const char **argv,
+            args_t *args, error_t *err)
 {
     args->exe = argv[0];
     args->out = NULL;
@@ -34,7 +35,7 @@ args_parse(int argc, char **argv, args_t *args, error_t *err)
                     {
                         if (args->in != NULL)
                         {
-                            error_node(err, "Input file alredy specified", NULL);
+                            error_node(ctx, err, "Input file alredy specified", NULL);
                         }
                         else
                         {
@@ -55,7 +56,7 @@ args_parse(int argc, char **argv, args_t *args, error_t *err)
                     }
                     else
                     {
-                        error_node(err, "Malformed validation specifier", NULL);
+                        error_node(ctx, err, "Malformed validation specifier", NULL);
                     }
                 }
                 else if (!strncmp(arg + 2, "folding", 8))
@@ -70,14 +71,14 @@ args_parse(int argc, char **argv, args_t *args, error_t *err)
                     }
                     else
                     {
-                        error_node(err, "Malformed folding specifier", NULL);
+                        error_node(ctx, err, "Malformed folding specifier", NULL);
                     }
                 }
                 else if (!strncmp(arg + 2, "front", 5))
                 {
                     if (args->front != NULL)
                     {
-                        error_node(err, "Frontend alredy specified", NULL);
+                        error_node(ctx, err, "Frontend alredy specified", NULL);
                     }
                     else if (arg[7] == '=')
                     {
@@ -85,14 +86,14 @@ args_parse(int argc, char **argv, args_t *args, error_t *err)
                     }
                     else
                     {
-                        error_node(err, "Malformed frontend specifier", NULL);
+                        error_node(ctx, err, "Malformed frontend specifier", NULL);
                     }
                 }
                 else if (!strncmp(arg + 2, "back", 4))
                 {
                     if (args->back != NULL)
                     {
-                        error_node(err, "Backend alredy specified", NULL);
+                        error_node(ctx, err, "Backend alredy specified", NULL);
                     }
                     else if (arg[6] == '=')
                     {
@@ -100,7 +101,7 @@ args_parse(int argc, char **argv, args_t *args, error_t *err)
                     }
                     else
                     {
-                        error_node(err, "Malformed frontend specifier", NULL);
+                        error_node(ctx, err, "Malformed frontend specifier", NULL);
                     }
                 }
                 else if (!strncmp(arg + 2, "asm", 3))
@@ -122,7 +123,7 @@ args_parse(int argc, char **argv, args_t *args, error_t *err)
                     }
                     else
                     {
-                        error_node(err, "Malformed asm specifier", NULL);
+                        error_node(ctx, err, "Malformed asm specifier", NULL);
                     }
                 }
                 else if (!strncmp(arg + 2, "cells", 5))
@@ -139,13 +140,13 @@ args_parse(int argc, char **argv, args_t *args, error_t *err)
                         }
                     }
 
-                    error_node(err, "Malformed cells specifier", NULL);
+                    error_node(ctx, err, "Malformed cells specifier", NULL);
                 }
                 else if (!strncmp(arg + 2, "func-name", 9))
                 {
                     if (args->front != NULL)
                     {
-                        error_node(err, "Funcname alredy specified", NULL);
+                        error_node(ctx, err, "Funcname alredy specified", NULL);
                     }
                     else if (arg[11] == '=')
                     {
@@ -153,12 +154,12 @@ args_parse(int argc, char **argv, args_t *args, error_t *err)
                     }
                     else
                     {
-                        error_node(err, "Malformed func-name specifier", NULL);
+                        error_node(ctx, err, "Malformed func-name specifier", NULL);
                     }
                 }
                 else
                 {
-                    error_node(err, "Malformed option", NULL);
+                    error_node(ctx, err, "Malformed option", NULL);
                 }
             }
             else if (arg[1] == 'f')
@@ -170,7 +171,7 @@ args_parse(int argc, char **argv, args_t *args, error_t *err)
                         {
                             if (args->flags & FLAG_READ)
                             {
-                                error_node(
+                                error_node(ctx,
                                     err, "Flag fread alredy specified", NULL
                                 );
                             }
@@ -186,7 +187,7 @@ args_parse(int argc, char **argv, args_t *args, error_t *err)
                         {
                             if (args->flags & FLAG_LIBC)
                             {
-                                error_node(
+                                error_node(ctx,
                                     err, "Flag flibc alredy specified", NULL
                                 );
                             }
@@ -202,7 +203,7 @@ args_parse(int argc, char **argv, args_t *args, error_t *err)
                         {
                             if (args->flags & FLAG_WRITE)
                             {
-                                error_node(
+                                error_node(ctx,
                                     err, "Flag fwrite alredy specified", NULL
                                 );
                             }
@@ -215,7 +216,7 @@ args_parse(int argc, char **argv, args_t *args, error_t *err)
                         {
                             if (args->flags & FLAG_WRAP_CELL)
                             {
-                                error_node(
+                                error_node(ctx,
                                     err, "Flag fwrap-cell alredy specified", NULL
                                 );
                             }
@@ -228,7 +229,7 @@ args_parse(int argc, char **argv, args_t *args, error_t *err)
                         {
                             if (args->flags & FLAG_WRAP_PTR)
                             {
-                                error_node(
+                                error_node(ctx,
                                     err, "Flag fwrap-ptr alredy specified", NULL
                                 );
                             }
@@ -240,7 +241,7 @@ args_parse(int argc, char **argv, args_t *args, error_t *err)
                         break;
 
                     default:
-                        error_node(err, "Invalid flag", NULL);
+                        error_node(ctx, err, "Invalid flag", NULL);
                         break;
                 }
             }
@@ -250,7 +251,7 @@ args_parse(int argc, char **argv, args_t *args, error_t *err)
                 {
                     if (args->in != NULL)
                     {
-                        error_node(err, "Output file alredy specified", NULL);
+                        error_node(ctx, err, "Output file alredy specified", NULL);
                     }
                     else
                     {
@@ -259,12 +260,12 @@ args_parse(int argc, char **argv, args_t *args, error_t *err)
                 }
                 else
                 {
-                    error_node(err, "Invalid output file specifier", NULL);
+                    error_node(ctx, err, "Invalid output file specifier", NULL);
                 }
             }
             else
             {
-                error_node(err, "Malformed option", NULL);
+                error_node(ctx, err, "Malformed option", NULL);
             }
             continue;
         }
@@ -273,7 +274,7 @@ args_parse(int argc, char **argv, args_t *args, error_t *err)
         {
             if (args->in != NULL)
             {
-                error_node(err, "Input file alredy specified", NULL);
+                error_node(ctx, err, "Input file alredy specified", NULL);
             }
             else
             {
@@ -285,22 +286,22 @@ args_parse(int argc, char **argv, args_t *args, error_t *err)
 end:
     if (args->out == NULL)
     {
-        error_node(err, "Missing output file", NULL);
+        error_node(ctx, err, "Missing output file", NULL);
     }
 
     if (args->in == NULL)
     {
-        error_node(err, "Missing input file", NULL);
+        error_node(ctx, err, "Missing input file", NULL);
     }
 
     if (args->front == NULL)
     {
-        error_node(err, "Missing frontend name", NULL);
+        error_node(ctx, err, "Missing frontend name", NULL);
     }
 
     if (args->back == NULL)
     {
-        error_node(err, "Missing backend name", NULL);
+        error_node(ctx, err, "Missing backend name", NULL);
     }
 
     if (!(args->flags & FLAG_LIBC))
@@ -323,7 +324,7 @@ end:
         }
         else
         {
-            error_node(err, "Missing func-name", NULL);
+            error_node(ctx, err, "Missing func-name", NULL);
         }
     }
 }

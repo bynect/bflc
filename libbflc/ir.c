@@ -14,9 +14,9 @@
     limitations under the License.
 */
 
+#define BFLC_INTERNAL
 #include "ir.h"
 
-#include <malloc.h>
 #include <stdio.h>
 
 void
@@ -26,9 +26,9 @@ ir_init(ir_t *ir)
 }
 
 void
-ir_node(ir_t *ir, uint8_t instr, intptr_t arg, pos_t pos)
+ir_node(context_t *ctx, ir_t *ir, uint8_t instr, intptr_t arg, pos_t pos)
 {
-    instr_t *node = malloc(sizeof(instr_t));
+    instr_t *node = ctx->mem->alloc_fn(sizeof(instr_t), ctx->mem->extra);
     node->instr = instr;
     node->arg = arg;
     node->pos = pos;
@@ -50,14 +50,14 @@ ir_node(ir_t *ir, uint8_t instr, intptr_t arg, pos_t pos)
 }
 
 void
-ir_free(ir_t *ir)
+ir_free(context_t *ctx, ir_t *ir)
 {
     instr_t *instr = ir->instrs;
     while (instr != NULL)
     {
         instr_t *node = instr;
         instr = instr->next;
-        free(node);
+        ctx->mem->free_fn(node, sizeof(instr_t), ctx->mem->extra);
     }
 }
 

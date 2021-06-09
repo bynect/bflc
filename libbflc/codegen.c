@@ -22,7 +22,7 @@ codegen_run(context_t *ctx, codegen_t *codegen, bytebuffer_t *buf, ir_t *ir)
     error_t err;
     error_init(&err, NULL, NULL);
 
-    bytebuffer_reset(buf, BYTEBUFFER_BLOCK);
+    bytebuffer_reset(ctx, buf, BYTEBUFFER_BLOCK);
     bool run = true;
 
     if (codegen->prologue_fn)
@@ -88,7 +88,7 @@ codegen_run(context_t *ctx, codegen_t *codegen, bytebuffer_t *buf, ir_t *ir)
                 break;
 
             default:
-                error_node(&err, "Invalid instruction", instr);
+                error_node(ctx, &err, "Invalid instruction", instr);
                 break;
         }
     }

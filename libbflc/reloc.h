@@ -19,6 +19,7 @@
 
 #include "labelstack.h"
 #include "bytebuffer.h"
+#include "context.h"
 
 #define RELOC_BLOCK 64
 
@@ -38,15 +39,15 @@ typedef struct {
 typedef void (*addr_patch_fn) (bytebuffer_t *buf, uint32_t base,
                                 uint8_t type, uint32_t off, void *extra);
 
-void reloc_init(reloc_t *reloc, size_t min);
+void reloc_init(context_t *ctx, reloc_t *reloc, size_t min);
 
-void reloc_reset(reloc_t *reloc, size_t min);
+void reloc_reset(context_t *ctx, reloc_t *reloc, size_t min);
 
-void reloc_write(reloc_t *reloc, uint8_t type, uint32_t off);
+void reloc_write(context_t *ctx, reloc_t *reloc, uint8_t type, uint32_t off);
 
 void reloc_patch(reloc_t *reloc, bytebuffer_t *buf, uint32_t cellmem,
                 uint32_t cellptr, addr_patch_fn addr_patch, void *extra);
 
-void reloc_free(reloc_t *reloc);
+void reloc_free(context_t *ctx, reloc_t *reloc);
 
 #endif

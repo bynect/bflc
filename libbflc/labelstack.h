@@ -17,6 +17,8 @@
 #ifndef BFLC_LABELSTACK_H
 #define BFLC_LABELSTACK_H
 
+#include "context.h"
+
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -30,14 +32,14 @@ typedef struct {
     uint32_t current;
 } labelstack_t;
 
-void labelstack_init(labelstack_t *labelstack, size_t min);
+void labelstack_init(context_t *ctx, labelstack_t *labelstack, size_t min);
 
-void labelstack_reset(labelstack_t *labelstack, size_t min);
+void labelstack_reset(context_t *ctx, labelstack_t *labelstack, size_t min);
 
-void labelstack_push(labelstack_t *labelstack, uint32_t label);
+void labelstack_push(context_t *ctx, labelstack_t *labelstack, uint32_t label);
 
 bool labelstack_pop(labelstack_t *labelstack, uint32_t *label);
 
-void labelstack_free(labelstack_t *labelstack);
+void labelstack_free(context_t *ctx, labelstack_t *labelstack);
 
 #endif

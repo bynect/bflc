@@ -1,13 +1,16 @@
 #ifndef BFLC_UNIT_H
 #define BFLC_UNIT_H
 
-#include "bytebuffer.h"
-#include "ir.h"
-#include "context.h"
+#include "libbflc/bytebuffer.h"
+#include "libbflc/ir.h"
+#include "libbflc/context.h"
+#include "libbflc/error.h"
 
 typedef error_t (*emit_fn)(context_t *ctx, bytebuffer_t *buf, ir_t *ir);
 
-typedef error_t (*scan_fn)(const char *src, size_t len, ir_t *ir);
+typedef error_t (*scan_fn)(
+    context_t *ctx, const char *src, size_t len, ir_t *ir
+);
 
 typedef struct {
     const char *name;

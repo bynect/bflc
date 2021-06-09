@@ -14,29 +14,30 @@
     limitations under the License.
 */
 
+#define BFLC_INTERNAL
 #include "labelstack.h"
 
-#include <malloc.h>
-
 void
-labelstack_init(labelstack_t *labelstack, size_t min)
+labelstack_init(context_t *ctx, labelstack_t *labelstack, size_t min)
 {
     min *= sizeof(uint32_t);
-    labelstack->labels = malloc(min);
+    labelstack->labels = ctx->mem->alloc_fn(min, ctx->mem->extra);
     labelstack->len = min;
     labelstack->pos = 0;
     labelstack->current = 0;
 }
 
 void
-labelstack_reset(labelstack_t *labelstack, size_t min)
+labelstack_reset(context_t *ctx, labelstack_t *labelstack, size_t min)
 {
     min *= sizeof(uint32_t);
     if (labelstack->labels != NULL)
     {
         if (labelstack->len < min)
         {
-            labelstack->labels = realloc(labelstack->labels, min);
+            labelstack->labels = ctx->mem->realloc_fn(
+                labelstack->labels, labelstack->len, min, ctx->mem->extra
+            );
             labelstack->len = min;
         }
         labelstack->pos = 0;
@@ -44,19 +45,24 @@ labelstack_reset(labelstack_t *labelstack, size_t min)
         return;
     }
 
-    labelstack->labels = malloc(min);
+    labelstack->labels = ctx->mem->alloc_fn(min, ctx->mem->extra);
     labelstack->len = min;
     labelstack->pos = 0;
     labelstack->current = 0;
 }
 
 void
-labelstack_push(labelstack_t *labelstack, uint32_t label)
+labelstack_push(context_t *ctx, labelstack_t *labelstack, uint32_t label)
 {
-    if (labelstack->pos + 1 >= labelstack->len)
+    if ((labelstack->pos + 1) * sizeof(uint32_t) >= labelstack->len)
     {
+        labelstack->labels = ctx->mem->realloc_fn(
+            labelstack->labels,
+            labelstack->len,
+            labelstack->len + LABELSTACK_BLOCK * sizeof(uint32_t),
+            ctx->mem->extra
+        );
         labelstack->len += LABELSTACK_BLOCK * sizeof(uint32_t);
-        labelstack->labels = realloc(labelstack->labels, labelstack->len);
     }
 
     labelstack->labels[++labelstack->pos] = label;
@@ -76,9 +82,9 @@ labelstack_pop(labelstack_t *labelstack, uint32_t *label)
 }
 
 void
-labelstack_free(labelstack_t *labelstack)
+labelstack_free(context_t *ctx, labelstack_t *labelstack)
 {
-    free(labelstack->labels);
+    ctx->mem->free_fn(labelstack->labels, labelstack->len, ctx->mem->extra);
     labelstack->labels = NULL;
     labelstack->len = 0;
     labelstack->pos = 0;

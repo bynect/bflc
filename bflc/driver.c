@@ -1,9 +1,10 @@
 #include "driver.h"
 #include "units.h"
-#include "bytebuffer.h"
-#include "ir.h"
-#include "mid/folding.h"
-#include "mid/validation.h"
+
+#include "libbflc/bytebuffer.h"
+#include "libbflc/ir.h"
+#include "libbflc/mid/folding.h"
+#include "libbflc/mid/validation.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -74,12 +75,12 @@ driver_main(context_t *ctx, args_t *args)
 
     ir_t ir;
     ir_init(&ir);
-    error_t err = front->scan_fn(src, in_size, &ir);
+    error_t err = front->scan_fn(ctx, src, in_size, &ir);
 
     if (error_dump(&err) > 0)
     {
-        error_free(&err);
-        ir_free(&ir);
+        error_free(ctx, &err);
+        ir_free(ctx, &ir);
         return 1;
     }
     else
@@ -93,8 +94,8 @@ driver_main(context_t *ctx, args_t *args)
 
         if (error_dump(&err) > 0)
         {
-            error_free(&err);
-            ir_free(&ir);
+            error_free(ctx, &err);
+            ir_free(ctx, &ir);
             return 1;
         }
         else
@@ -109,8 +110,8 @@ driver_main(context_t *ctx, args_t *args)
 
         if (error_dump(&err) > 0)
         {
-            error_free(&err);
-            ir_free(&ir);
+            error_free(ctx, &err);
+            ir_free(ctx, &ir);
             return 1;
         }
         else
@@ -120,15 +121,15 @@ driver_main(context_t *ctx, args_t *args)
     }
 
     bytebuffer_t buf;
-    bytebuffer_init(&buf, BYTEBUFFER_BLOCK);
+    bytebuffer_init(ctx, &buf, BYTEBUFFER_BLOCK);
 
     err = back->asm_fn(ctx, &buf, &ir);
 
     if (error_dump(&err) > 0)
     {
-        error_free(&err);
-        ir_free(&ir);
-        bytebuffer_free(&buf);
+        error_free(ctx, &err);
+        ir_free(ctx, &ir);
+        bytebuffer_free(ctx, &buf);
         return 1;
     }
     else
@@ -141,8 +142,8 @@ driver_main(context_t *ctx, args_t *args)
     fclose(out);
 
     free(src);
-    ir_free(&ir);
-    bytebuffer_free(&buf);
+    ir_free(ctx, &ir);
+    bytebuffer_free(ctx, &buf);
     return 0;
 }
 

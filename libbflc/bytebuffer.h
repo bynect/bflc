@@ -17,6 +17,8 @@
 #ifndef BFLC_BYTEBUFFER_H
 #define BFLC_BYTEBUFFER_H
 
+#include "context.h"
+
 #include <stdint.h>
 #include <stddef.h>
 
@@ -28,14 +30,14 @@ typedef struct {
     size_t pos;
 } bytebuffer_t;
 
-void bytebuffer_init(bytebuffer_t *buf, size_t min);
+void bytebuffer_init(context_t *ctx, bytebuffer_t *buf, size_t min);
 
-void bytebuffer_reset(bytebuffer_t *buf, size_t min);
+void bytebuffer_reset(context_t *ctx, bytebuffer_t *buf, size_t min);
 
-void bytebuffer_write(bytebuffer_t *buf, uint8_t byte);
+void bytebuffer_write(context_t *ctx, bytebuffer_t *buf, uint8_t byte);
 
-void bytebuffer_writes(bytebuffer_t *buf, const uint8_t *bytes, size_t len);
+void bytebuffer_writes(context_t *ctx, bytebuffer_t *buf, const uint8_t *bytes, size_t len);
 
-void bytebuffer_free(bytebuffer_t *buf);
+void bytebuffer_free(context_t *ctx, bytebuffer_t *buf);
 
 #endif

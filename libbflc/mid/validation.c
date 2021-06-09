@@ -41,7 +41,7 @@ pass_validation(context_t *ctx, ir_t *ir)
                 if (cellptr == cellmax && !wrap_ptr)
                 {
                     error_node(
-                        &err, "Cell pointer out of upper bounds", instr
+                        ctx, &err, "Cell pointer out of upper bounds", instr
                     );
                 }
                 else
@@ -54,7 +54,7 @@ pass_validation(context_t *ctx, ir_t *ir)
                 if (cellptr == 0 && !wrap_ptr)
                 {
                     error_node(
-                        &err, "Cell pointer out of lower bounds", instr
+                        ctx, &err, "Cell pointer out of lower bounds", instr
                     );
                 }
                 else
@@ -78,7 +78,7 @@ pass_validation(context_t *ctx, ir_t *ir)
     if (jmps != 0)
     {
         error_node(
-            &err, "Unmatched jump", jmps > 0 ? jmpbeg : jmpend
+            ctx, &err, "Unmatched jump", jmps > 0 ? jmpbeg : jmpend
         );
     }
 

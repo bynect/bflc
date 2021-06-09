@@ -14,51 +14,57 @@
     limitations under the License.
 */
 
+#define BFLC_INTERNAL
 #include "reloc.h"
 
-#include <malloc.h>
-
 void
-reloc_init(reloc_t *reloc, size_t min)
+reloc_init(context_t *ctx, reloc_t *reloc, size_t min)
 {
-    labelstack_init(&reloc->labelstack, LABELSTACK_BLOCK);
+    labelstack_init(ctx, &reloc->labelstack, LABELSTACK_BLOCK);
     min *= sizeof(*(reloc->offs));
 
-    reloc->offs = malloc(min);
+    reloc->offs = ctx->mem->alloc_fn(min, ctx->mem->extra);
     reloc->off_len = min;
     reloc->off_pos = 0;
 }
 
 void
-reloc_reset(reloc_t *reloc, size_t min)
+reloc_reset(context_t *ctx, reloc_t *reloc, size_t min)
 {
-    labelstack_reset(&reloc->labelstack, LABELSTACK_BLOCK);
+    labelstack_reset(ctx, &reloc->labelstack, LABELSTACK_BLOCK);
     min *= sizeof(*reloc->offs);
 
     if (reloc->offs != NULL)
     {
         if (reloc->off_len < min)
         {
-            reloc->offs = realloc(reloc->offs, min);
+            reloc->offs = ctx->mem->realloc_fn(
+                reloc->offs, reloc->off_len, min, ctx->mem->extra
+            );
             reloc->off_len = min;
         }
         reloc->off_pos = 0;
         return;
     }
 
-    reloc->offs = malloc(min);
+    reloc->offs = ctx->mem->alloc_fn(min, ctx->mem->extra);
     reloc->off_len = min;
     reloc->off_pos = 0;
 }
 
 void
-reloc_write(reloc_t *reloc, uint8_t type, uint32_t off)
+reloc_write(context_t *ctx, reloc_t *reloc, uint8_t type, uint32_t off)
 {
     size_t off_pos = (reloc->off_pos + 1) * sizeof(*reloc->offs);
     if (off_pos >= reloc->off_len)
     {
+        reloc->offs = ctx->mem->realloc_fn(
+            reloc->offs,
+            reloc->off_len,
+            reloc->off_len + RELOC_BLOCK * sizeof(*reloc->offs),
+            ctx->mem->extra
+        );
         reloc->off_len += RELOC_BLOCK * sizeof(*reloc->offs);
-        reloc->offs = realloc(reloc->offs, reloc->off_len);
     }
 
     reloc->offs[reloc->off_pos].type = type;
@@ -80,10 +86,10 @@ reloc_patch(reloc_t *reloc, bytebuffer_t *buf, uint32_t cellmem,
 }
 
 void
-reloc_free(reloc_t *reloc)
+reloc_free(context_t *ctx, reloc_t *reloc)
 {
-    labelstack_free(&reloc->labelstack);
-    free(reloc->offs);
+    labelstack_free(ctx, &reloc->labelstack);
+    ctx->mem->free_fn(reloc->offs, reloc->off_len, ctx->mem->extra);
     reloc->offs = NULL;
     reloc->off_len = 0;
     reloc->off_pos = 0;

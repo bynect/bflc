@@ -1,10 +1,12 @@
 #ifndef ARGS_H
 #define ARGS_H
 
+#include "libbflc/context.h"
+#include "libbflc/error.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
-#include "error.h"
 
 #define FLAVOR_INTELASM 1
 #define FLAVOR_INTELBIN 2
@@ -30,7 +32,8 @@ typedef struct {
     uint32_t flags;
 } args_t;
 
-void args_parse(int argc, char **argv, args_t *args, error_t *err);
+void args_parse(context_t *ctx, int argc, const char **argv,
+                args_t *args, error_t *err);
 
 void args_dump(const args_t *args);
 

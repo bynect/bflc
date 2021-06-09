@@ -14,37 +14,24 @@
     limitations under the License.
 */
 
+#define BFLC_INTERNAL
 #include "context.h"
 
-#include <malloc.h>
 #include <string.h>
 
-struct context {
-    bool f_write;
-    bool f_read;
-    bool f_libc;
-    bool f_wrap;
-    bool f_wrap_ptr;
-    bool o_asm;
-    bool o_mach;
-    size_t cells;
-    char *func_name;
-    bool intel_asm;
-    bool intel_bin;
-    void *extra;
-};
-
 context_t *
-context_new(void)
+context_new(mem_t *mem)
 {
-    context_t *ctx = calloc(1, sizeof(struct context));
+    context_t *ctx = mem->alloc_fn(sizeof(struct context), mem->extra);
+    context_reset(ctx, mem);
     return ctx;
 }
 
 void
-context_reset(context_t *ctx)
+context_reset(context_t *ctx, mem_t *mem)
 {
     memset(ctx, 0, sizeof(struct context));
+    ctx->mem = mem;
 }
 
 bool
@@ -171,5 +158,5 @@ context_get(context_t *ctx, uint8_t option, void *value)
 void
 context_free(context_t *ctx)
 {
-    free(ctx);
+    ctx->mem->free_fn(ctx, sizeof(context_t), ctx->mem->free_fn);
 }

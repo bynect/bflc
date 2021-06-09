@@ -42,7 +42,7 @@ prologue_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
 
         if (intel_bin && !(f_write && f_read))
         {
-            error_node(err, "Binary output can use only syscalls", NULL);
+            error_node(ctx, err, "Binary output can use only syscalls", NULL);
             return false;
         }
 
@@ -58,7 +58,7 @@ prologue_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
                 "	lea	rax, [rel __cellmem]\n"
                 "	mov	[rel __cellptr], rax\n";
 
-            bytebuffer_writes(buf, prologue, sizeof(prologue) - 1);
+            bytebuffer_writes(ctx, buf, prologue, sizeof(prologue) - 1);
         }
         else
         {
@@ -96,7 +96,7 @@ prologue_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
 
             snprintf(prologue, size + 1, format, cells,
                     func_name, func_name);
-            bytebuffer_writes(buf, prologue, size);
+            bytebuffer_writes(ctx, buf, prologue, size);
         }
     }
     else
@@ -136,7 +136,7 @@ prologue_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
 
         snprintf(prologue, size + 1, format, cells, cells,
                 func_name, func_name, func_name);
-        bytebuffer_writes(buf, prologue, size);
+        bytebuffer_writes(ctx, buf, prologue, size);
     }
 
     return true;
@@ -179,7 +179,7 @@ epilogue_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
             uint8_t epilogue[size + 1];
 
             snprintf(epilogue, size + 1, format, cells);
-            bytebuffer_writes(buf, epilogue, size);
+            bytebuffer_writes(ctx, buf, epilogue, size);
         }
         else
         {
@@ -188,7 +188,7 @@ epilogue_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
                 "	pop	rbp\n"
                 "	ret\n";
 
-            bytebuffer_writes(buf, epilogue, sizeof(epilogue) - 1);
+            bytebuffer_writes(ctx, buf, epilogue, sizeof(epilogue) - 1);
         }
     }
     else
@@ -203,7 +203,7 @@ epilogue_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
         uint8_t epilogue[size + 1];
 
         snprintf(epilogue, size + 1, format, func_name, func_name);
-        bytebuffer_writes(buf, epilogue, size);
+        bytebuffer_writes(ctx, buf, epilogue, size);
     }
 
     return true;
@@ -215,7 +215,7 @@ ptrinc_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
 {
     if (instr->arg < 0)
     {
-        error_node(err, "Invalid instruction argument", instr);
+        error_node(ctx, err, "Invalid instruction argument", instr);
         return true;
     }
 
@@ -243,7 +243,7 @@ ptrinc_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
     uint8_t ptrinc[size + 1];
 
     snprintf(ptrinc, size + 1, format, instr->arg);
-    bytebuffer_writes(buf, ptrinc, size);
+    bytebuffer_writes(ctx, buf, ptrinc, size);
 
     return true;
 }
@@ -254,7 +254,7 @@ ptrdec_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
 {
     if (instr->arg < 0)
     {
-        error_node(err, "Invalid instruction argument", instr);
+        error_node(ctx, err, "Invalid instruction argument", instr);
         return true;
     }
 
@@ -282,7 +282,7 @@ ptrdec_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
     uint8_t ptrdec[size + 1];
 
     snprintf(ptrdec, size + 1, format, instr->arg);
-    bytebuffer_writes(buf, ptrdec, size);
+    bytebuffer_writes(ctx, buf, ptrdec, size);
 
     return true;
 }
@@ -293,7 +293,7 @@ celinc_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
 {
     if (instr->arg < 0)
     {
-        error_node(err, "Invalid instruction argument", instr);
+        error_node(ctx, err, "Invalid instruction argument", instr);
         return true;
     }
 
@@ -323,7 +323,7 @@ celinc_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
     uint8_t celinc[size + 1];
 
     snprintf(celinc, size + 1, format, instr->arg);
-    bytebuffer_writes(buf, celinc, size);
+    bytebuffer_writes(ctx, buf, celinc, size);
 
     return true;
 }
@@ -334,7 +334,7 @@ celdec_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
 {
     if (instr->arg < 0)
     {
-        error_node(err, "Invalid instruction argument", instr);
+        error_node(ctx, err, "Invalid instruction argument", instr);
         return true;
     }
 
@@ -364,7 +364,7 @@ celdec_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
     uint8_t celdec[size + 1];
 
     snprintf(celdec, size + 1, format, instr->arg);
-    bytebuffer_writes(buf, celdec, size);
+    bytebuffer_writes(ctx, buf, celdec, size);
 
     return true;
 }
@@ -390,7 +390,7 @@ output_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
                 "	mov	rdx, 1\n"
                 "	syscall\n";
 
-            bytebuffer_writes(buf, output, sizeof(output) - 1);
+            bytebuffer_writes(ctx, buf, output, sizeof(output) - 1);
         }
         else
         {
@@ -401,7 +401,7 @@ output_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
                 "	mov	edi, eax\n"
                 "	call	[rel putchar wrt ..got]\n";
 
-            bytebuffer_writes(buf, output, sizeof(output) - 1);
+            bytebuffer_writes(ctx, buf, output, sizeof(output) - 1);
         }
     }
     else
@@ -415,7 +415,7 @@ output_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
                 "	movq	$1, %rdx\n"
                 "	syscall\n";
 
-            bytebuffer_writes(buf, output, sizeof(output) - 1);
+            bytebuffer_writes(ctx, buf, output, sizeof(output) - 1);
         }
         else
         {
@@ -426,7 +426,7 @@ output_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
                 "	movl	%eax, %edi\n"
                 "	call	putchar@PLT\n";
 
-            bytebuffer_writes(buf, output, sizeof(output) - 1);
+            bytebuffer_writes(ctx, buf, output, sizeof(output) - 1);
         }
     }
 
@@ -454,7 +454,7 @@ input_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
                 "	mov	rdx, 1\n"
                 "	syscall\n";
 
-            bytebuffer_writes(buf, input, sizeof(input) - 1);
+            bytebuffer_writes(ctx, buf, input, sizeof(input) - 1);
         }
         else
         {
@@ -464,7 +464,7 @@ input_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
                 "	mov	rax, [rel __cellptr]\n"
                 "	mov	BYTE [rax], dl\n";
 
-            bytebuffer_writes(buf, input, sizeof(input) - 1);
+            bytebuffer_writes(ctx, buf, input, sizeof(input) - 1);
         }
     }
     else
@@ -478,7 +478,7 @@ input_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
                 "	movl	$1, %rdx\n"
                 "	syscall\n";
 
-            bytebuffer_writes(buf, input, sizeof(input) - 1);
+            bytebuffer_writes(ctx, buf, input, sizeof(input) - 1);
         }
         else
         {
@@ -488,7 +488,7 @@ input_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
                 "	movq	__cellptr(%rip), %rax\n"
                 "	movb	%dl, (%rax)\n";
 
-            bytebuffer_writes(buf, input, sizeof(input) - 1);
+            bytebuffer_writes(ctx, buf, input, sizeof(input) - 1);
         }
     }
 
@@ -532,10 +532,10 @@ jmpbeg_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
     uint8_t jmpbeg[size + 1];
 
     snprintf(jmpbeg, size + 1, format, current, target);
-    bytebuffer_writes(buf, jmpbeg, size);
+    bytebuffer_writes(ctx, buf, jmpbeg, size);
 
-    labelstack_push(labelstack, labelstack->current++);
-    labelstack_push(labelstack, labelstack->current++);
+    labelstack_push(ctx, labelstack, labelstack->current++);
+    labelstack_push(ctx, labelstack, labelstack->current++);
 
     return true;
 }
@@ -560,7 +560,7 @@ jmpend_asm_x86_64(context_t *ctx, bytebuffer_t *buf,
     uint8_t jmpend[size + 1];
 
     snprintf(jmpend, size + 1, format, target, next);
-    bytebuffer_writes(buf, jmpend, size);
+    bytebuffer_writes(ctx, buf, jmpend, size);
 
     return true;
 }
@@ -569,7 +569,7 @@ error_t
 emit_asm_x86_64(context_t *ctx, bytebuffer_t *buf, ir_t *ir)
 {
     labelstack_t labelstack;
-    labelstack_init(&labelstack, LABELSTACK_BLOCK);
+    labelstack_init(ctx, &labelstack, LABELSTACK_BLOCK);
 
     codegen_t codegen;
     codegen.prologue_fn = prologue_asm_x86_64;
@@ -585,7 +585,7 @@ emit_asm_x86_64(context_t *ctx, bytebuffer_t *buf, ir_t *ir)
     codegen.extra = &labelstack;
 
     error_t err = codegen_run(ctx, &codegen, buf, ir);
-    labelstack_free(&labelstack);
+    labelstack_free(ctx, &labelstack);
 
     return err;
 }
@@ -614,7 +614,7 @@ prologue_mach_x86_64(context_t *ctx, bytebuffer_t *buf,
 
     if (!(f_write && f_read))
     {
-        error_node(err, "Binary output can use only syscalls", NULL);
+        error_node(ctx, err, "Binary output can use only syscalls", NULL);
         return false;
     }
 
@@ -624,11 +624,11 @@ prologue_mach_x86_64(context_t *ctx, bytebuffer_t *buf,
         0x48, 0x8d, 0x05, 0xaf, 0xaf, 0xaf, 0xaf, // leaq cellmem(%rip), %rax
         0x48, 0x89, 0x05, 0xaf, 0xaf, 0xaf, 0xaf // movq %rax, cellptr(%rip)
     };
-    bytebuffer_writes(buf, prologue, sizeof(prologue));
+    bytebuffer_writes(ctx, buf, prologue, sizeof(prologue));
 
     reloc_t *reloc = extra;
-    reloc_write(reloc, RELOC_PATCH_MEM, 7);
-    reloc_write(reloc, RELOC_PATCH_PTR, 14);
+    reloc_write(ctx, reloc, RELOC_PATCH_MEM, 7);
+    reloc_write(ctx, reloc, RELOC_PATCH_PTR, 14);
 
     return true;
 }
@@ -642,11 +642,11 @@ epilogue_mach_x86_64(context_t *ctx, bytebuffer_t *buf,
         0x5d, // popq %rbp
         0xc3 // ret
     };
-    bytebuffer_writes(buf, epilogue, sizeof(epilogue));
+    bytebuffer_writes(ctx, buf, epilogue, sizeof(epilogue));
 
     while ((buf->pos % 16) != 0)
     {
-        bytebuffer_write(buf, 0x90); // pad
+        bytebuffer_write(ctx, buf, 0x90); // pad
     }
 
     uint32_t cellmem = buf->pos + 3;
@@ -656,18 +656,18 @@ epilogue_mach_x86_64(context_t *ctx, bytebuffer_t *buf,
 
     while (cells--)
     {
-        bytebuffer_write(buf, 0x00);
+        bytebuffer_write(ctx, buf, 0x00);
     }
 
     while ((buf->pos % 32) != 0)
     {
-        bytebuffer_write(buf, 0x90); // pad
+        bytebuffer_write(ctx, buf, 0x90); // pad
     }
 
     uint32_t cellptr = buf->pos + 3;
 
     uint8_t ptr[8] = {0};
-    bytebuffer_writes(buf, ptr, sizeof(ptr));
+    bytebuffer_writes(ctx, buf, ptr, sizeof(ptr));
 
     reloc_t *reloc = extra;
     reloc_patch(
@@ -715,73 +715,73 @@ instr_mach_x86_64(context_t *ctx, bytebuffer_t *buf,
     switch (instr->instr)
     {
         case INSTR_PTRINC:
-            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 3);
-            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 14);
+            reloc_write(ctx, reloc, RELOC_PATCH_PTR, buf->pos + 3);
+            reloc_write(ctx, reloc, RELOC_PATCH_PTR, buf->pos + 14);
 
             ptrbin[9] = 0xc0; // add
             ptrbin[10] = instr->arg; // imm
-            bytebuffer_writes(buf, ptrbin, sizeof(ptrbin));
+            bytebuffer_writes(ctx, buf, ptrbin, sizeof(ptrbin));
             break;
 
         case INSTR_PTRDEC:
-            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 3);
-            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 14);
+            reloc_write(ctx, reloc, RELOC_PATCH_PTR, buf->pos + 3);
+            reloc_write(ctx, reloc, RELOC_PATCH_PTR, buf->pos + 14);
 
             ptrbin[9] = 0xe8; // sub
             ptrbin[10] = instr->arg; // imm
-            bytebuffer_writes(buf, ptrbin, sizeof(ptrbin));
+            bytebuffer_writes(ctx, buf, ptrbin, sizeof(ptrbin));
             break;
 
         case INSTR_CELINC:
-            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 3);
+            reloc_write(ctx, reloc, RELOC_PATCH_PTR, buf->pos + 3);
 
             celbin[11] = 0xc2; // add
             celbin[12] = instr->arg; // imm
-            bytebuffer_writes(buf, celbin, sizeof(celbin));
+            bytebuffer_writes(ctx, buf, celbin, sizeof(celbin));
             break;
 
         case INSTR_CELDEC:
-            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 3);
+            reloc_write(ctx, reloc, RELOC_PATCH_PTR, buf->pos + 3);
 
             celbin[11] = 0xea; // sub
             celbin[12] = instr->arg; // imm
-            bytebuffer_writes(buf, celbin, sizeof(celbin));
+            bytebuffer_writes(ctx, buf, celbin, sizeof(celbin));
             break;
 
         case INSTR_OUTPUT:
-            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 13);
+            reloc_write(ctx, reloc, RELOC_PATCH_PTR, buf->pos + 13);
 
             sysbin[1] = 0x01; // write
             sysbin[6] = 0x01; // stdout
-            bytebuffer_writes(buf, sysbin, sizeof(sysbin));
+            bytebuffer_writes(ctx, buf, sysbin, sizeof(sysbin));
             break;
 
         case INSTR_INPUT:
-            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 13);
+            reloc_write(ctx, reloc, RELOC_PATCH_PTR, buf->pos + 13);
 
             sysbin[1] = 0x00; // read
             sysbin[6] = 0x00; // stdin
-            bytebuffer_writes(buf, sysbin, sizeof(sysbin));
+            bytebuffer_writes(ctx, buf, sysbin, sizeof(sysbin));
             break;
 
         case INSTR_JMPBEG:
-            reloc_write(reloc, RELOC_PATCH_PTR, buf->pos + 3);
+            reloc_write(ctx, reloc, RELOC_PATCH_PTR, buf->pos + 3);
 
             addr = buf->pos;
-            bytebuffer_writes(buf, jmpbin, sizeof(jmpbin));
+            bytebuffer_writes(ctx, buf, jmpbin, sizeof(jmpbin));
 
-            labelstack_push(&reloc->labelstack, addr);
+            labelstack_push(ctx, &reloc->labelstack, addr);
             break;
 
         case INSTR_JMPEND:
             labelstack_pop(&reloc->labelstack, &addr);
             int32_t off = -(buf->pos + 5 - addr);
 
-            bytebuffer_write(buf, 0xe9); // jmp addr
-            bytebuffer_write(buf, (uint8_t)(off >> 0));
-            bytebuffer_write(buf, (uint8_t)(off >> 8));
-            bytebuffer_write(buf, (uint8_t)(off >> 16));
-            bytebuffer_write(buf, (uint8_t)(off >> 24));
+            bytebuffer_write(ctx, buf, 0xe9); // jmp addr
+            bytebuffer_write(ctx, buf, (uint8_t)(off >> 0));
+            bytebuffer_write(ctx, buf, (uint8_t)(off >> 8));
+            bytebuffer_write(ctx, buf, (uint8_t)(off >> 16));
+            bytebuffer_write(ctx, buf, (uint8_t)(off >> 24));
 
             off = buf->pos - (addr + sizeof(jmpbin));
             buf->bytes[addr + 13] = (uint8_t)(off >> 0);
@@ -801,7 +801,7 @@ error_t
 emit_mach_x86_64(context_t *ctx, bytebuffer_t *buf, ir_t *ir)
 {
     reloc_t reloc;
-    reloc_init(&reloc, RELOC_BLOCK);
+    reloc_init(ctx, &reloc, RELOC_BLOCK);
 
     codegen_t codegen;
     codegen.prologue_fn = prologue_mach_x86_64;
@@ -817,7 +817,7 @@ emit_mach_x86_64(context_t *ctx, bytebuffer_t *buf, ir_t *ir)
     codegen.extra = &reloc;
 
     error_t err = codegen_run(ctx, &codegen, buf, ir);
-    reloc_free(&reloc);
+    reloc_free(ctx, &reloc);
 
     return err;
 }

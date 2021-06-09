@@ -13,6 +13,24 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+void *
+malloc_wrap(size_t size, void *extra)
+{
+    return malloc(size);
+}
+
+void *
+realloc_wrap(void *ptr, size_t prev, size_t size, void *extra)
+{
+    return realloc(ptr, size);
+}
+
+void
+free_wrap(void *ptr, size_t prev, void *extra)
+{
+    free(ptr);
+}
+
 int
 jit_execute(bytebuffer_t *buf)
 {
@@ -42,11 +60,12 @@ jit_execute(bytebuffer_t *buf)
     return 0;
 }
 
-#define CHECK_ERR(err, ir, msg) \
+#define CHECK_ERR(ctx, err, ir, msg) \
     if (error_dump(&err) > 0) \
     { \
-        error_free(&err); \
-        ir_free(&ir); \
+        error_free(ctx, &err); \
+        ir_free(ctx, &ir); \
+        context_free(ctx); \
         return 1; \
     } \
     else \
@@ -81,13 +100,9 @@ main(int argc, const char **argv)
     fread(src, 1, size, file);
     fclose(file);
 
-    ir_t ir;
-    ir_init(&ir);
+    mem_t mem = {malloc_wrap, realloc_wrap, free_wrap, NULL};
+    context_t *ctx = context_new(&mem);
 
-    error_t err = scan_brainfuck(src, size, &ir);
-    CHECK_ERR(err, ir, "Program scanned\n");
-
-    context_t *ctx = context_new();
     size_t cells = 30000;
     context_set(ctx, CTX_CELLS, &cells);
 
@@ -95,27 +110,33 @@ main(int argc, const char **argv)
     context_set(ctx, CTX_FWRITE, &syscall);
     context_set(ctx, CTX_FREAD, &syscall);
 
+    ir_t ir;
+    ir_init(&ir);
+
+    error_t err = scan_brainfuck(ctx, src, size, &ir);
+    CHECK_ERR(ctx, err, ir, "Program scanned\n");
+
     err = pass_validation(ctx, &ir);
-    CHECK_ERR(err, ir, "Program validated\n");
+    CHECK_ERR(ctx, err, ir, "Program validated\n");
 
     err = pass_folding(ctx, &ir);
-    CHECK_ERR(err, ir, "Program optimized\n");
+    CHECK_ERR(ctx, err, ir, "Program optimized\n");
 
     bytebuffer_t buf;
-    bytebuffer_init(&buf, BYTEBUFFER_BLOCK);
+    bytebuffer_init(ctx, &buf, BYTEBUFFER_BLOCK);
 
     err = emit_mach_x86_64(ctx, &buf, &ir);
 
     if (!error_success(&err))
     {
-        bytebuffer_free(&buf);
+        bytebuffer_free(ctx, &buf);
     }
 
-    CHECK_ERR(err, ir, "Program compiled\n");
+    CHECK_ERR(ctx, err, ir, "Program compiled\n");
     int res = jit_execute(&buf);
 
-    bytebuffer_free(&buf);
-    ir_free(&ir);
+    bytebuffer_free(ctx, &buf);
+    ir_free(ctx, &ir);
     context_free(ctx);
     return res;
 }

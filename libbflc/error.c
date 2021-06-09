@@ -14,10 +14,11 @@
     limitations under the License.
 */
 
+#define BFLC_INTERNAL
 #include "error.h"
 #include "ir.h"
 
-#include <malloc.h>
+#include <stdio.h>
 
 void
 error_init(error_t *err, const char *pretty, const instr_t *instr)
@@ -28,7 +29,8 @@ error_init(error_t *err, const char *pretty, const instr_t *instr)
 }
 
 void
-error_node(error_t *err, const char *pretty, const instr_t *instr)
+error_node(context_t *ctx, error_t *err,
+            const char *pretty, const instr_t *instr)
 {
     if (err->pretty == NULL && err->instr == NULL)
     {
@@ -36,7 +38,7 @@ error_node(error_t *err, const char *pretty, const instr_t *instr)
     }
     else
     {
-        error_t *node = malloc(sizeof(error_t));
+        error_t *node = ctx->mem->alloc_fn(sizeof(error_t), ctx->mem->extra);
         error_init(node, pretty, instr);
 
         while (err->next != NULL)
@@ -48,14 +50,14 @@ error_node(error_t *err, const char *pretty, const instr_t *instr)
 }
 
 void
-error_free(error_t *err)
+error_free(context_t *ctx, error_t *err)
 {
     err = err->next;
     while (err != NULL)
     {
         error_t *node = err;
         err = err->next;
-        free(node);
+        ctx->mem->free_fn(node, sizeof(error_t), ctx->mem->extra);
     }
 }
 

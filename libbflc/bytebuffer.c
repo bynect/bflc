@@ -14,58 +14,64 @@
     limitations under the License.
 */
 
+#define BFLC_INTERNAL
 #include "bytebuffer.h"
 
-#include <malloc.h>
 #include <string.h>
 
 void
-bytebuffer_init(bytebuffer_t *buf, size_t min)
+bytebuffer_init(context_t *ctx, bytebuffer_t *buf, size_t min)
 {
-    buf->bytes = malloc(min);
+    buf->bytes = ctx->mem->alloc_fn(min, ctx->mem->extra);
     buf->len = min;
     buf->pos = 0;
 }
 
 void
-bytebuffer_reset(bytebuffer_t *buf, size_t min)
+bytebuffer_reset(context_t *ctx, bytebuffer_t *buf, size_t min)
 {
     if (buf->bytes != NULL)
     {
         if (buf->len < min)
         {
-            buf->bytes = realloc(buf->bytes, min);
+            buf->bytes = ctx->mem->realloc_fn(
+                buf->bytes, buf->len, min, ctx->mem->extra
+            );
             buf->len = min;
         }
         buf->pos = 0;
         return;
     }
 
-    buf->bytes = malloc(min);
+    buf->bytes = ctx->mem->alloc_fn(min, ctx->mem->extra);
     buf->len = min;
     buf->pos = 0;
 }
 
 void
-bytebuffer_write(bytebuffer_t *buf, uint8_t byte)
+bytebuffer_write(context_t *ctx, bytebuffer_t *buf, uint8_t byte)
 {
     if (buf->pos + 1 >= buf->len)
     {
+        buf->bytes = ctx->mem->realloc_fn(
+            buf->bytes, buf->len, buf->len * 2, ctx->mem->extra
+        );
         buf->len *= 2;
-        buf->bytes = realloc(buf->bytes, buf->len);
     }
 
     buf->bytes[buf->pos++] = byte;
 }
 
 void
-bytebuffer_writes(bytebuffer_t *buf, const uint8_t *bytes, size_t len)
+bytebuffer_writes(context_t *ctx, bytebuffer_t *buf,
+                const uint8_t *bytes, size_t len)
 {
     if (buf->pos + len >= buf->len)
     {
-        buf->len *= 2;
-        buf->len += len;
-        buf->bytes = realloc(buf->bytes, buf->len);
+        buf->bytes = ctx->mem->realloc_fn(
+            buf->bytes, buf->len, buf->len * 2 + len, ctx->mem->extra
+        );
+        buf->len = buf->len * 2 + len;
     }
 
     memcpy(buf->bytes + buf->pos, bytes, len);
@@ -73,9 +79,9 @@ bytebuffer_writes(bytebuffer_t *buf, const uint8_t *bytes, size_t len)
 }
 
 void
-bytebuffer_free(bytebuffer_t *buf)
+bytebuffer_free(context_t *ctx, bytebuffer_t *buf)
 {
-    free(buf->bytes);
+    ctx->mem->free_fn(buf->bytes, buf->len, ctx->mem->extra);
     buf->bytes = NULL;
     buf->len = 0;
     buf->pos = 0;

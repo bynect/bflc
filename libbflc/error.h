@@ -17,8 +17,10 @@
 #ifndef BFLC_ERROR_H
 #define BFLC_ERROR_H
 
-#include <stdbool.h>
 #include "ir.h"
+#include "context.h"
+
+#include <stdbool.h>
 
 typedef struct error {
     const char *pretty;
@@ -28,9 +30,10 @@ typedef struct error {
 
 void error_init(error_t *err, const char *pretty, const instr_t *instr);
 
-void error_node(error_t *err, const char *pretty, const instr_t *instr);
+void error_node(context_t *ctx, error_t *err,
+                const char *pretty, const instr_t *instr);
 
-void error_free(error_t *err);
+void error_free(context_t *ctx, error_t *err);
 
 bool error_success(const error_t *err);
 
