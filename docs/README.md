@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Brain Fuck Languages Compiler (bflc) is a compiler framework that targets
+The BrainFuck-like Languages Compiler (bflc) is a compiler framework that targets
 [Brainfuck][bf-wikipedia] and closely [related languages](bf-family).
 
 ## Installation
