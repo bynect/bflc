@@ -21,7 +21,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <malloc.h>
+#include <stdlib.h>
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -44,7 +44,7 @@ jit_execute(bytebuffer_t *buf)
         return 1;
     }
 
-    printf("Before JIT execution.\n");
+    printf("Before JIT execution\n");
     printf("----------------------------------------\n");
 
     memcpy(exc, buf->bytes, buf->pos);
@@ -52,7 +52,7 @@ jit_execute(bytebuffer_t *buf)
     fn();
 
     printf("----------------------------------------\n");
-    printf("After JIT execution.\n");
+    printf("After JIT execution\n");
 
     munmap(exc, buf->pos);
     close(fd);
