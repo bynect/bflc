@@ -15,7 +15,7 @@
 */
 
 #ifndef BFLC_FRONT_BRAINFUCK_H
-#define BFLC_FRONTBRAINFUCK_H
+#define BFLC_FRONT_BRAINFUCK_H
 
 #include "../ir.h"
 #include "../error.h"

@@ -1,6 +1,6 @@
 #include "mem.h"
 
-#include <malloc.h>
+#include <stdlib.h>
 
 static void *
 mem_alloc(size_t size, void *extra)
