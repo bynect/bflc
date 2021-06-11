@@ -1,0 +1,45 @@
+name: build
+on:
+  push:
+    paths:
+      - 'libbflc'
+      - 'bflc'
+      - 'docs/jit_example.c'
+  pull_request:
+    paths:
+      - 'libbflc'
+      - 'bflc'
+      - 'docs/jit_example.c'
+
+jobs:
+  build-linux-gcc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -qq cmake
+      - name: build all and examples
+        run: |
+          cmake -B build
+          make -C build
+        env:
+          CC: gcc
+          CXX: g++
+
+  build-linux-clang:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -qq cmake
+      - name: build all and examples
+        run: |
+          cmake -B build
+          make -C build
+        env:
+          CC: clang
+          CXX: clang++
