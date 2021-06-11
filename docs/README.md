@@ -43,7 +43,7 @@ These functions can report errors based on incorrect context or instructions.
 Frontend units are made of one functions with the following signature.
 
 ```c
-    error_t scan_LANG(const char *src, size_t len, ir_t *ir);
+    error_t scan_LANG(context_t *ctx, const char *src, size_t len, ir_t *ir);
 ```
 
 The `scan_LANG` functions generate and intermediate representation from a source
