@@ -5,11 +5,13 @@ on:
       - 'libbflc'
       - 'bflc'
       - 'docs/jit_example.c'
+      - '.github/workflows/*.yml'
   pull_request:
     paths:
       - 'libbflc'
       - 'bflc'
       - 'docs/jit_example.c'
+      - '.github/workflows/*.yml'
 
 jobs:
   build-linux-gcc:
@@ -36,6 +38,28 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -qq cmake
+      - name: build all and examples
+        run: |
+          cmake -B build
+          make -C build
+        env:
+          CC: clang
+          CXX: clang++
+
+  build-macos-clang:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: install build dependencies
+        shell: cmake -P {0}
+        run: |
+          set(cmake_suffix "Darwin-x86_64.tar.gz")
+          set(cmake_dir "cmake-${cmake_version}-Darwin-x86_64/CMake.app/Contents/bin")
+          set(cmake_url "https://github.com/Kitware/CMake/releases/download/v${cmake_version}/cmake-${cmake_version}-${cmake_suffix}")
+          file(DOWNLOAD "${cmake_url}" ./cmake.zip SHOW_PROGRESS)
+          execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./cmake.zip)
+          file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/${cmake_dir}" cmake_dir)
+          message("::set-output name=cmake_dir::${cmake_dir}")
       - name: build all and examples
         run: |
           cmake -B build
