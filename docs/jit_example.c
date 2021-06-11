@@ -39,6 +39,7 @@ jit_execute(bytebuffer_t *buf)
 
     if (exc == MAP_FAILED)
     {
+        close(fd);
         perror("mmap");
         return 1;
     }
