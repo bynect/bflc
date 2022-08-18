@@ -114,6 +114,29 @@ because it can be used with multiple frontend and backend.
 This will compile a Brainfuck input file `myfile.bf` to x86_64 assembly
 in Intel Nasm syntax and store it in `outfile.asm`.
 
+### CLI arguments
+
+#### Flags
+```sh
+-fwrite
+-fread
+-flibc
+-fwrap-cell
+-fwrap-ptr
+```
+#### Options
+```sh
+-o filename
+```
+```sh
+--validation=[true/false]
+--folding=[true/false]
+--front=[brainfuck/fuckbees]
+--back=[x86_64]
+--asm=[ as|gas|gnu / nasm|intel / nasm-bin|intel-bin ]
+--cells=<long long int>
+```
+
 GAS assembly syntax is set by default.
 The Validation and Folding passes are enabled by default.
 `flibc` is set when neither `fwrite` or `fread` are set.

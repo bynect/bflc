@@ -160,7 +160,7 @@ args_parse(context_t *ctx, int argc, const char **argv,
                 }
                 else if (!strncmp(arg + 2, "func-name", 9))
                 {
-                    if (args->front != NULL)
+                    if (args->func_name != NULL)
                     {
                         error_node(ctx, err, "Funcname alredy specified", NULL);
                     }
@@ -265,7 +265,7 @@ args_parse(context_t *ctx, int argc, const char **argv,
             {
                 if (len == 2 && i != (argc - 1))
                 {
-                    if (args->in != NULL)
+                    if (args->out != NULL)
                     {
                         error_node(ctx, err, "Output file alredy specified", NULL);
                     }
