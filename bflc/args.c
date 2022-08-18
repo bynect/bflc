@@ -160,7 +160,7 @@ args_parse(context_t *ctx, int argc, const char **argv,
                 }
                 else if (!strncmp(arg + 2, "func-name", 9))
                 {
-                    if (args->front != NULL)
+                    if (args->func_name != NULL)
                     {
                         error_node(ctx, err, "Funcname alredy specified", NULL);
                     }
