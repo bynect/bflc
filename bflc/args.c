@@ -265,7 +265,7 @@ args_parse(context_t *ctx, int argc, const char **argv,
             {
                 if (len == 2 && i != (argc - 1))
                 {
-                    if (args->in != NULL)
+                    if (args->out != NULL)
                     {
                         error_node(ctx, err, "Output file alredy specified", NULL);
                     }
