@@ -1,7 +1,2 @@
-/*
-!docs/
-!libbflc/
-!bflc/
-!CMakeLists.txt
-!.gitignore
-!.github/
+*.old
+*.bin
