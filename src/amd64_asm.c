@@ -93,15 +93,18 @@ static void amd64_asm_entry(Out_Channel *out, Bfir_Entry *entry, Label_Stack *st
 	out_print(out, "\tret\n");
 }
 
-static bool amd64_asm_emit(Back_Emitter *back, Out_Channel *out, Bfir_Entry *entry) {
-	assert(back->sign.quad == 0x866400aa);
-
-	amd64_asm_entry(out, entry, ((Amd64_Asm_Emitter *)back)->stack);
-	return true;
+void amd64_asm_aux_init(Amd64_Asm_Aux *aux, Label_Stack *stack) {
+	aux->aux.sign = amd64_asm_back.sign;
+	aux->stack = stack;
 }
 
-void amd64_asm_init(Amd64_Asm_Emitter *back, Label_Stack *stack) {
-	back->back.sign.quad = 0x866400aa;
-	back->back.emit_f = amd64_asm_emit;
-	back->stack = stack;
+void amd64_asm_emit(Out_Channel *out, Bfir_Entry *entry, Back_Aux *aux) {
+	assert(aux->sign.quad == amd64_asm_back.sign.quad);
+	amd64_asm_entry(out, entry, ((Amd64_Asm_Aux *)aux)->stack);
 }
+
+const Back_Info amd64_asm_back = {
+	.name = "amd64-asm",
+	.sign.quad = 0x866400aa,
+	.emit_f = amd64_asm_emit,
+};

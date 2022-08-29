@@ -6,19 +6,18 @@
 #include "bfir.h"
 #include "label.h"
 #include "out.h"
+#include "sign.h"
 
-typedef union {
-	uint8_t bytes[8];
-	uint64_t quad;
-} Signature;
-
-struct Back_Emitter;
-
-typedef bool (Back_Emitter_F)(struct Back_Emitter *back, Out_Channel *out, Bfir_Entry *entry);
-
-typedef struct Back_Emitter {
+typedef struct {
 	Signature sign;
-	Back_Emitter_F *emit_f;
-} Back_Emitter;
+} Back_Aux;
+
+typedef void (Back_Emit_F)(Out_Channel *out, Bfir_Entry *entry, Back_Aux *aux);
+
+typedef struct {
+	const char *name;
+	Signature sign;
+	Back_Emit_F *emit_f;
+} Back_Info;
 
 #endif
