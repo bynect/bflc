@@ -7,11 +7,12 @@
 #include "bfir.h"
 #include "label.h"
 #include "out.h"
+#include "amd64.h"
 
 #define CELLP "rbx"
 #define CELLN 30000
 
-void x86_64_asm_instr(Out_Channel *out, Bfir_Instr *instr, Label_Stack *stack) {
+static void amd64_asm_instr(Out_Channel *out, Bfir_Instr *instr, Label_Stack *stack) {
 	uint32_t label;
 	switch (instr->kind) {
 		case BFIR_ADD:
@@ -54,7 +55,7 @@ void x86_64_asm_instr(Out_Channel *out, Bfir_Instr *instr, Label_Stack *stack) {
 	}
 }
 
-bool x86_64_asm_emit(Out_Channel *out, Bfir_Entry *entry, Label_Stack *stack) {
+static void amd64_asm_entry(Out_Channel *out, Bfir_Entry *entry, Label_Stack *stack) {
 	out_print(out, "\tbits 64\n");
 	out_print(out, "\textern putchar\n");
 	out_print(out, "\textern getchar\n\n");
@@ -80,7 +81,7 @@ bool x86_64_asm_emit(Out_Channel *out, Bfir_Entry *entry, Label_Stack *stack) {
 
 	Bfir_Instr *instr = bfir_entry_get(entry, entry->head);
 	while (true) {
-		x86_64_asm_instr(out, instr, stack);
+		amd64_asm_instr(out, instr, stack);
 		if (instr->next == 0) break;
 		instr = bfir_entry_get(entry, instr->next);
 	}
@@ -90,11 +91,17 @@ bool x86_64_asm_emit(Out_Channel *out, Bfir_Entry *entry, Label_Stack *stack) {
 	out_print(out, "\tpop rbx\n");
 	out_print(out, "\tpop rbp\n");
 	out_print(out, "\tret\n");
+}
 
+static bool amd64_asm_emit(Back_Emitter *back, Out_Channel *out, Bfir_Entry *entry) {
+	assert(back->sign.quad == 0x866400aa);
+
+	amd64_asm_entry(out, entry, ((Amd64_Asm_Emitter *)back)->stack);
 	return true;
 }
 
-Bflc_Back x86_64_asm_back = {
-	"x86_64_asm",
-	x86_64_asm_emit,
-};
+void amd64_asm_init(Amd64_Asm_Emitter *back, Label_Stack *stack) {
+	back->back.sign.quad = 0x866400aa;
+	back->back.emit_f = amd64_asm_emit;
+	back->stack = stack;
+}

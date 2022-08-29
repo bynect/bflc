@@ -7,11 +7,18 @@
 #include "label.h"
 #include "out.h"
 
-typedef bool (Bflc_Back_Emit_F)(Out_Channel *out, Bfir_Entry *entry, Label_Stack *stack);
+typedef union {
+	uint8_t bytes[8];
+	uint64_t quad;
+} Signature;
 
-typedef struct {
-	const char *name;
-	Bflc_Back_Emit_F *emit_f;
-} Bflc_Back;
+struct Back_Emitter;
+
+typedef bool (Back_Emitter_F)(struct Back_Emitter *back, Out_Channel *out, Bfir_Entry *entry);
+
+typedef struct Back_Emitter {
+	Signature sign;
+	Back_Emitter_F *emit_f;
+} Back_Emitter;
 
 #endif
