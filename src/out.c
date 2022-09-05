@@ -6,24 +6,30 @@
 #include "out.h"
 
 void out_init_none(Out_Channel *out) {
+	assert(out != NULL);
+
 	out->kind = OUT_NONE;
 }
 
 void out_init_file(Out_Channel *out, FILE *file) {
+	assert(out != NULL);
+	assert(file != NULL);
+
 	out->kind = OUT_FILE;
 	out->file = file;
-
-	assert(file != NULL);
 }
 
 void out_init_buffer(Out_Channel *out, Byte_Buffer *buffer) {
+	assert(out != NULL);
+	assert(buffer != NULL);
+
 	out->kind = OUT_BUFFER;
 	out->buffer = buffer;
-
-	assert(buffer != NULL);
 }
 
 void out_write(Out_Channel *out, const uint8_t *bytes, size_t len) {
+	assert(out != NULL);
+
 	if (out->kind == OUT_NONE) return;
 	assert(out->kind == OUT_FILE || out->kind == OUT_BUFFER);
 
@@ -33,6 +39,9 @@ void out_write(Out_Channel *out, const uint8_t *bytes, size_t len) {
 }
 
 void out_print(Out_Channel *out, const char *fmt, ...) {
+	assert(out != NULL);
+	assert(fmt != NULL);
+
 	if (out->kind == OUT_NONE) return;
 	assert(out->kind == OUT_FILE || out->kind == OUT_BUFFER);
 

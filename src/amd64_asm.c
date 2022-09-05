@@ -7,7 +7,7 @@
 #include "bfir.h"
 #include "label.h"
 #include "out.h"
-#include "amd64.h"
+#include "amd64_asm.h"
 
 #define CELLP "rbx"
 #define CELLN 30000

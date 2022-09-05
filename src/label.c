@@ -2,12 +2,13 @@
 #include <assert.h>
 
 void label_stack_init(Label_Stack *stack, Label_Id *labels, size_t size) {
+	assert(stack != NULL);
+	assert(labels != NULL && size != 0);
+
 	stack->labels = labels;
 	stack->len = 0;
 	stack->size = size;
 	stack->fresh = 0;
-
-	assert(labels != NULL && size != 0);
 }
 
 void label_stack_push(Label_Stack *stack, Label_Id label) {

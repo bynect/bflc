@@ -51,12 +51,13 @@ static void pool_grow(Bfir_Pool *pool) {
 }
 
 void bfir_pool_init(Bfir_Pool *pool, Bfir_Instr *instrs, size_t size, Bfir_Pool_Grow_F grow_f) {
+	assert(pool != NULL);
+	assert(instrs != NULL && size != 0);
+
 	pool->instrs = instrs;
 	pool->len = 0;
 	pool->size = size;
 	pool->grow_f = grow_f != NULL ? grow_f : pool_grow;
-
-	assert(instrs != NULL && size != 0);
 }
 
 Bfir_Instr *bfir_pool_bump(Bfir_Pool *pool) {
