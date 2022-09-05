@@ -12,8 +12,8 @@
 #define CELLP "rbx"
 #define CELLN 30000
 
-static void amd64_asm_instr(Out_Channel *out, Bfir_Instr *instr, Label_Stack *stack) {
-	uint32_t label;
+static void amd64_asm_instr(Out_Channel *out, Bfir_Instr *instr, Label_Stack *stack, Label_Id *fresh) {
+	Label_Id label;
 	switch (instr->kind) {
 		case BFIR_ADD:
 			out_print(out, "\tmovzx	edx, BYTE [%s]\n", CELLP);
@@ -36,7 +36,7 @@ static void amd64_asm_instr(Out_Channel *out, Bfir_Instr *instr, Label_Stack *st
 			break;
 
 		case BFIR_JMPF:
-			label = label_stack_fresh(stack);
+			label = ++(*fresh);
 			out_print(out, ".L%uf:\n", label);
 			out_print(out, "\tmov al, BYTE [%s]\n", CELLP);
 			out_print(out, "\ttest al, al\n");
@@ -79,12 +79,15 @@ static void amd64_asm_entry(Out_Channel *out, Bfir_Entry *entry, Label_Stack *st
 	out_print(out, "\tpush rbx\n");
 	out_print(out, "\tmov %s, __cells\n", CELLP);
 
+	Label_Id fresh = 0;
 	Bfir_Instr *instr = bfir_entry_get(entry, entry->head);
+
 	while (true) {
-		amd64_asm_instr(out, instr, stack);
+		amd64_asm_instr(out, instr, stack, &fresh);
 		if (instr->next == 0) break;
 		instr = bfir_entry_get(entry, instr->next);
 	}
+
 	assert(stack->len == 0 && "Unpaired jumps");
 
 	out_print(out, "\tmov rax, 0\n");
