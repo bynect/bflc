@@ -94,11 +94,15 @@ static void amd64_asm_entry(Out_Channel *out, Bfir_Entry *entry, Label_Stack *st
 }
 
 void amd64_asm_aux_init(Amd64_Asm_Aux *aux, Label_Stack *stack) {
+	assert(aux != NULL);
+	assert(stack != NULL);
+
 	aux->aux.sign = amd64_asm_back.sign;
 	aux->stack = stack;
 }
 
 void amd64_asm_emit(Out_Channel *out, Bfir_Entry *entry, Back_Aux *aux) {
+	assert(out != NULL && entry != NULL && aux != NULL);
 	assert(aux->sign.quad == amd64_asm_back.sign.quad);
 	amd64_asm_entry(out, entry, ((Amd64_Asm_Aux *)aux)->stack);
 }
