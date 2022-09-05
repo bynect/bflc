@@ -39,5 +39,21 @@ void in_init_slice(In_Channel *in, const uint8_t *bytes, size_t len) {
 }
 
 ssize_t in_read(In_Channel *in, uint8_t *bytes, size_t len) {
+	assert(in != NULL);
+	assert(in->kind >= IN_NONE && in->kind <= IN_SLICE);
+
+	if (in->kind == IN_NONE) return 0;
+
+	if (in->kind == IN_FILE) return fread(bytes, 1, len, in->file);
+	else {
+		size_t slen = in->slice.len > len ? len : in->slice.len;
+		if (slen == 0) return 0;
+
+		memcpy(bytes, in->slice.bytes, slen);
+		in->slice.bytes += slen;
+		in->slice.len -= slen;
+		return slen;
+	}
+
 	return -1;
 }

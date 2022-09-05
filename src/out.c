@@ -29,6 +29,7 @@ void out_init_buffer(Out_Channel *out, Byte_Buffer *buffer) {
 
 void out_write(Out_Channel *out, const uint8_t *bytes, size_t len) {
 	assert(out != NULL);
+	assert(out->kind >= OUT_NONE && out->kind <= OUT_BUFFER);
 
 	if (out->kind == OUT_NONE) return;
 	assert(out->kind == OUT_FILE || out->kind == OUT_BUFFER);
@@ -41,9 +42,9 @@ void out_write(Out_Channel *out, const uint8_t *bytes, size_t len) {
 void out_print(Out_Channel *out, const char *fmt, ...) {
 	assert(out != NULL);
 	assert(fmt != NULL);
+	assert(out->kind >= OUT_NONE && out->kind <= OUT_BUFFER);
 
 	if (out->kind == OUT_NONE) return;
-	assert(out->kind == OUT_FILE || out->kind == OUT_BUFFER);
 
 	va_list args;
 	va_start(args, fmt);
