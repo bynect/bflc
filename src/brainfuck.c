@@ -1,13 +1,18 @@
+#include <assert.h>
+
 #include "brainfuck.h"
 #include "bfir.h"
+#include "front.h"
+#include "in.h"
 
-bool parse_brainfuck(const char *src, Bfir_Entry *entry) {
-	while (true) {
+void brainfuck_parse(In_Channel *in, Bfir_Entry *entry, Front_Aux *aux) {
+	assert(aux == NULL || aux->sign.quad == brainfuck_front.sign.quad);
+
+	uint8_t c;
+	while (in_read(in, &c, 1) == 1) {
 		Bfir_Instr instr;
-		switch (*src++) {
-			case '\0':
-				return true;
 
+		switch (c) {
 			case '+':
 				bfir_instr_init(&instr, BFIR_ADD, 1);
 				break;
@@ -45,10 +50,10 @@ bool parse_brainfuck(const char *src, Bfir_Entry *entry) {
 		}
 		bfir_entry_append(entry, &instr);
 	}
-	return false;
 }
 
-Bflc_Front brainfuck_front = {
-	"brainfuck",
-	parse_brainfuck,
+const Front_Info brainfuck_front = {
+	.name = "brainfuck",
+	.sign.quad = 0xbaff0000,
+	.parse_f = brainfuck_parse,
 };

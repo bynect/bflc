@@ -4,7 +4,6 @@
 #include <stdbool.h>
 
 #include "bfir.h"
-#include "label.h"
 #include "out.h"
 #include "sign.h"
 

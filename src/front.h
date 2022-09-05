@@ -4,12 +4,19 @@
 #include <stdbool.h>
 
 #include "bfir.h"
+#include "in.h"
+#include "sign.h"
 
-typedef bool (Bflc_Front_Parse_F)(const char *src, Bfir_Entry *entry);
+typedef struct {
+	Signature sign;
+} Front_Aux;
+
+typedef void (Front_Parse_F)(In_Channel *in, Bfir_Entry *entry, Front_Aux *aux);
 
 typedef struct {
 	const char *name;
-	Bflc_Front_Parse_F *parse_f;
-} Bflc_Front;
+	Signature sign;
+	Front_Parse_F *parse_f;
+} Front_Info;
 
 #endif
