@@ -53,6 +53,18 @@ static const uint8_t amd64_mov_rax[] = { 0x48, 0xb8 };
 // call rax
 static const uint8_t amd64_call_rax[] = { 0xff, 0xd0 };
 
+// mov al, BYTE PTR [rbx]
+// test al, al
+// jz (rel32)
+static const uint8_t amd64_test[] = {
+	0x8a, 0x03,
+	0x84, 0xc0,
+	0x0f, 0x84,
+};
+
+// jmp (rel32)
+static const uint8_t amd64_jmp[] = { 0xe9 };
+
 static void amd64_write64(Out_Channel *out,  uint64_t quad) {
 	uint8_t bytes[8] = {
 		quad >> (8 * 0),
@@ -78,7 +90,8 @@ static void amd64_write32(Out_Channel *out,  uint32_t dword) {
 }
 
 static void amd64_instr(Out_Channel *out, Bfir_Instr *instr, Label_Stack *stack, Amd64_Layout *mem) {
-	Label_Id label;
+	int32_t target = 0;
+
 	switch (instr->kind) {
 		case BFIR_ADD:
 			assert(instr->arg <= UINT8_MAX);
@@ -115,11 +128,15 @@ static void amd64_instr(Out_Channel *out, Bfir_Instr *instr, Label_Stack *stack,
 			break;
 
 		case BFIR_JMPF:
-			assert(false);
+			out_write(out, amd64_test, sizeof(amd64_test));
+			assert(label_stack_pop(stack, (uint32_t *)&target));
+			amd64_write32(out, target);
 			break;
 
 		case BFIR_JMPB:
-			assert(false);
+			out_write(out, amd64_jmp, sizeof(amd64_jmp));
+			assert(label_stack_pop(stack, (uint32_t *)&target));
+			amd64_write32(out, target);
 			break;
 
 		default:
@@ -127,7 +144,61 @@ static void amd64_instr(Out_Channel *out, Bfir_Instr *instr, Label_Stack *stack,
 	}
 }
 
+void amd64_labels(Bfir_Entry *entry, Label_Stack *stack) {
+	uint32_t ip = sizeof(amd64_prologue) + 8;
+	uint32_t target = 0;
+
+	Bfir_Instr *instr = bfir_entry_get(entry, entry->head);
+	while (true) {
+		switch (instr->kind) {
+			case BFIR_ADD:
+				ip += sizeof(amd64_add) + 1;
+				break;
+
+			case BFIR_ADDP:
+				if (instr->arg <= UINT8_MAX) ip += sizeof(amd64_addp_8) + 1;
+				else ip += sizeof(amd64_addp_32) + 4;
+				break;
+
+			case BFIR_READ:
+				ip += sizeof(amd64_mov_rax) + 8 + sizeof(amd64_call_rax) + sizeof(amd64_mov_al);
+				break;
+
+			case BFIR_WRITE:
+				ip += sizeof(amd64_movzx_edi) + sizeof(amd64_mov_rax) + 8 + sizeof(amd64_call_rax);
+				break;
+
+			case BFIR_JMPF:
+				ip += sizeof(amd64_test) + 4;
+				label_stack_push(stack, ip);
+				break;
+
+			case BFIR_JMPB:
+				assert(label_stack_pop(stack, &target));
+				int32_t tmp = (int32_t)ip - target;
+				label_stack_push(stack, *(uint32_t *)&tmp); // lf -> lb
+				ip += sizeof(amd64_jmp) + 4;
+				tmp = (int32_t)target - ip;
+				label_stack_push(stack, *(uint32_t *)&tmp); // lb -> lf
+				break;
+
+			default:
+				assert(false && "Unreachable");
+		}
+
+		if (instr->next == 0) break;
+		instr = bfir_entry_get(entry, instr->next);
+	}
+}
+
 static void amd64_entry(Out_Channel *out, Bfir_Entry *entry, Label_Stack *stack, Amd64_Layout *mem) {
+	amd64_labels(entry, stack);
+	label_stack_reverse(stack);
+
+	for (int i = 0; i < stack->len; i++) {
+		printf("LABEL %d: %d\n", i , *(int32_t *)&stack->labels[i]);
+	}
+
 	out_write(out, amd64_prologue, sizeof(amd64_prologue));
 	amd64_write64(out, (uint64_t)mem->cells);
 

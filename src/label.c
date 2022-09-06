@@ -19,3 +19,11 @@ bool label_stack_pop(Label_Stack *stack, Label_Id *label) {
 	*label = stack->labels[--stack->len];
 	return true;
 }
+
+void label_stack_reverse(Label_Stack *stack) {
+	for (size_t l = 0, h = stack->len - 1; l < h; l++, h--) {
+		Label_Id tmp = stack->labels[l];
+		stack->labels[l] = stack->labels[h];
+		stack->labels[h] = tmp;
+	}
+}

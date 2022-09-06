@@ -19,4 +19,6 @@ void label_stack_push(Label_Stack *stack, Label_Id label);
 
 bool label_stack_pop(Label_Stack *stack, Label_Id *label);
 
+void label_stack_reverse(Label_Stack *stack);
+
 #endif
