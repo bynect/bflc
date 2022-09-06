@@ -32,11 +32,8 @@ void out_write(Out_Channel *out, const uint8_t *bytes, size_t len) {
 	assert(out->kind >= OUT_NONE && out->kind <= OUT_BUFFER);
 
 	if (out->kind == OUT_NONE) return;
-	assert(out->kind == OUT_FILE || out->kind == OUT_BUFFER);
-
 	if (out->kind == OUT_FILE) assert(len == fwrite(bytes, 1, len, out->file));
-
-	byte_buffer_write(out->buffer, bytes, len);
+	else byte_buffer_write(out->buffer, bytes, len);
 }
 
 void out_print(Out_Channel *out, const char *fmt, ...) {
