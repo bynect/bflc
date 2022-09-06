@@ -16,9 +16,10 @@ static void amd64_asm_instr(Out_Channel *out, Bfir_Instr *instr, Label_Stack *st
 	Label_Id label;
 	switch (instr->kind) {
 		case BFIR_ADD:
-			out_print(out, "\tmovzx	edx, BYTE [%s]\n", CELLP);
-			out_print(out, "\tadd edx, %ld\n", instr->arg);
-			out_print(out, "\tmov [%s], BYTE dl\n", CELLP);
+			//out_print(out, "\tmovzx	edx, BYTE [%s]\n", CELLP);
+			//out_print(out, "\tadd edx, %ld\n", instr->arg);
+			//out_print(out, "\tmov [%s], BYTE dl\n", CELLP);
+			out_print(out, "\tadd BYTE [%s], %ld\n", CELLP, instr->arg);
 			break;
 
 		case BFIR_ADDP:
