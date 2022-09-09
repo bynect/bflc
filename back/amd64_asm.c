@@ -11,13 +11,10 @@
 
 static const char *amd64_cellp = "rbx";
 
-static void amd64_asm_instr(Out_Channel *out, Bfir_Instr *instr, Label_Stack *stack, Label_Id *fresh) {
+static void amd64_asm_instr(Out_Channel *out, Bfir_Instr *instr, Label_Stack *stack, Label_Id *fresh, Amd64_Asm_Flag flags) {
 	Label_Id label;
 	switch (instr->kind) {
 		case BFIR_ADD:
-			//out_print(out, "\tmovzx	edx, BYTE [%s]\n", amd64_cellp);
-			//out_print(out, "\tadd edx, %ld\n", instr->arg);
-			//out_print(out, "\tmov [%s], BYTE dl\n", amd64_cellp);
 			out_print(out, "\tadd BYTE [%s], %ld\n", amd64_cellp, instr->arg);
 			break;
 
@@ -26,13 +23,31 @@ static void amd64_asm_instr(Out_Channel *out, Bfir_Instr *instr, Label_Stack *st
 			break;
 
 		case BFIR_READ:
-			out_print(out, "\tcall [rel getchar wrt ..got]\n");
-			out_print(out, "\tmov BYTE [%s], al\n", amd64_cellp);
+			if (flags & AMD64_ASM_READ_SYSCALL) {
+				out_print(out, "\tmov rax, 0\n");
+				out_print(out, "\tmov rdi, 0\n");
+				out_print(out, "\tmov rsi, rbx\n");
+				out_print(out, "\tmov rdx, %ld\n", instr->arg);
+				out_print(out, "\tsyscall\n");
+			} else {
+				assert(instr->arg == 1);
+				out_print(out, "\tcall [rel getchar wrt ..got]\n");
+				out_print(out, "\tmov BYTE [%s], al\n", amd64_cellp);
+			}
 			break;
 
 		case BFIR_WRITE:
-			out_print(out, "\tmovzx edi, BYTE [%s]\n", amd64_cellp);
-			out_print(out, "\tcall [rel putchar wrt ..got]\n");
+			if (flags & AMD64_ASM_WRITE_SYSCALL) {
+				out_print(out, "\tmov rax, 1\n");
+				out_print(out, "\tmov rdi, 1\n");
+				out_print(out, "\tmov rsi, rbx\n");
+				out_print(out, "\tmov rdx, %ld\n", instr->arg);
+				out_print(out, "\tsyscall\n");
+			} else {
+				assert(instr->arg == 1);
+				out_print(out, "\tmovzx edi, BYTE [%s]\n", amd64_cellp);
+				out_print(out, "\tcall [rel putchar wrt ..got]\n");
+			}
 			break;
 
 		case BFIR_JMPF:
@@ -55,10 +70,10 @@ static void amd64_asm_instr(Out_Channel *out, Bfir_Instr *instr, Label_Stack *st
 	}
 }
 
-static void amd64_asm_entry(Out_Channel *out, Bfir_Entry *entry, Label_Stack *stack, size_t celln) {
+static void amd64_asm_entry(Out_Channel *out, Bfir_Entry *entry, Label_Stack *stack, size_t celln, Amd64_Asm_Flag flags) {
 	out_print(out, "\tbits 64\n");
-	out_print(out, "\textern putchar\n");
-	out_print(out, "\textern getchar\n\n");
+	if (!(flags & AMD64_ASM_READ_SYSCALL)) out_print(out, "\textern getchar\n\n");
+	if (!(flags & AMD64_ASM_WRITE_SYSCALL)) out_print(out, "\textern putchar\n");
 
 	out_print(out, "\tsection .bss\n");
 	out_print(out, "\talign 32\n");
@@ -78,7 +93,7 @@ static void amd64_asm_entry(Out_Channel *out, Bfir_Entry *entry, Label_Stack *st
 	Bfir_Instr *instr = bfir_entry_get(entry, entry->head);
 
 	while (true) {
-		amd64_asm_instr(out, instr, stack, &fresh);
+		amd64_asm_instr(out, instr, stack, &fresh, flags);
 		if (instr->next == 0) break;
 		instr = bfir_entry_get(entry, instr->next);
 	}
@@ -91,7 +106,7 @@ static void amd64_asm_entry(Out_Channel *out, Bfir_Entry *entry, Label_Stack *st
 	out_print(out, "\tret\n");
 }
 
-void amd64_asm_aux_init(Amd64_Asm_Aux *aux, Label_Stack *stack, size_t celln) {
+void amd64_asm_aux_init(Amd64_Asm_Aux *aux, Label_Stack *stack, size_t celln, Amd64_Asm_Flag flags) {
 	assert(aux != NULL);
 	assert(stack != NULL);
 	assert(celln != 0);
@@ -99,12 +114,13 @@ void amd64_asm_aux_init(Amd64_Asm_Aux *aux, Label_Stack *stack, size_t celln) {
 	aux->aux.sign = amd64_asm_back.sign;
 	aux->stack = stack;
 	aux->celln = celln;
+	aux->flags = flags;
 }
 
 void amd64_asm_emit(Out_Channel *out, Bfir_Entry *entry, Back_Aux *aux) {
 	assert(out != NULL && entry != NULL && aux != NULL);
 	assert(aux->sign.quad == amd64_asm_back.sign.quad);
-	amd64_asm_entry(out, entry, ((Amd64_Asm_Aux *)aux)->stack, ((Amd64_Asm_Aux *)aux)->celln);
+	amd64_asm_entry(out, entry, ((Amd64_Asm_Aux *)aux)->stack, ((Amd64_Asm_Aux *)aux)->celln, ((Amd64_Asm_Aux *)aux)->flags);
 }
 
 const Back_Info amd64_asm_back = {
