@@ -22,4 +22,6 @@ typedef struct {
 
 int driver_run(Driver *drive, int argc, const char **argv);
 
+void driver_error(const char *message);
+
 #endif

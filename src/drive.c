@@ -3,6 +3,7 @@
 #include <assert.h>
 
 #include "drive.h"
+#include "opt.h"
 
 enum {
 	FLAG_VERBOSE,
@@ -13,12 +14,6 @@ enum {
 	FLAG_OUT,
 	FLAG_LAST,
 };
-
-static void driver_error(const char *message) {
-	const char *red = "\x1b[31m";
-	const char *reset = "\x1b[0m";
-	fprintf(stderr, "%serror%s: %s\n", red, reset, message);
-}
 
 static void driver_help(Driver *drive, Opt_Info *opts, size_t opts_len, Opt_Usage *usage) {
 	opt_info_help(opts, opts_len, NULL, NULL, usage, stdout);
@@ -210,4 +205,10 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 	fclose(out_file);
 
 	return 0;
+}
+
+void driver_error(const char *message) {
+	const char *red = "\x1b[31m";
+	const char *reset = "\x1b[0m";
+	fprintf(stderr, "%serror%s: %s\n", red, reset, message);
 }

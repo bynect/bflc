@@ -11,7 +11,6 @@
 #include "amd64_asm.h"
 
 int main(int argc, const char **argv) {
-
 	const size_t labels_len = 256;
 	Label_Id labels[labels_len];
 
