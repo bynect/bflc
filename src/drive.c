@@ -184,6 +184,7 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 	bfir_entry_init(&entry, "main", &pool);
 
 	drive->fronts[front].info->parse_f(&in_chan, &entry, drive->fronts[front].aux);
+	fclose(in_file);
 
 	FILE *out_file = fopen(out_path, "wb");
 	if (out_file == NULL) {
@@ -192,11 +193,9 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 	}
 
 	Out_Channel out_chan;
-	out_init_file(&out_chan, in_file);
+	out_init_file(&out_chan, out_file);
 
 	drive->backs[front].info->emit_f(&out_chan, &entry, drive->backs[back].aux);
-
-	fclose(in_file);
 	fclose(out_file);
 
 	return 0;
