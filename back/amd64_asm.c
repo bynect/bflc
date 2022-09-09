@@ -113,6 +113,8 @@ void amd64_asm_emit(Out_Channel *out, Bfir_Entry *entry, Back_Aux *aux) {
 
 const Back_Info amd64_asm_back = {
 	.name = "amd64-asm",
-	.sign.quad = 0x866400aa,
+	.desc = "X86_64 assembly backend",
+	.outs = BACK_ASM,
+	.sign.quad = 0x866400008664aaaa,
 	.emit_f = amd64_asm_emit,
 };
