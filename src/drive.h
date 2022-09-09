@@ -5,15 +5,19 @@
 #include "back.h"
 #include "front.h"
 
-#define DRIVER_FRONTS 1
-#define DRIVER_BACKS 2
+#define DRIVER_FRONTS 2
+#define DRIVER_BACKS 1
 
 typedef struct {
 	struct {
+		const char **names;
+		const char *desc;
 		const Front_Info *info;
 		Front_Aux *aux;
 	} fronts[DRIVER_FRONTS];
 	struct {
+		const char **names;
+		const char *desc;
 		const Back_Info *info;
 		Back_Aux *aux;
 	} backs[DRIVER_BACKS];

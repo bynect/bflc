@@ -23,16 +23,16 @@ static void driver_help(Driver *drive, Opt_Info *opts, size_t opts_len, Opt_Usag
 
 		printf("\nAvailable frontends:\n");
 		for (size_t i = 0; i < DRIVER_FRONTS; ++i) {
-			size_t line_curr = printf("  %-12s (sign: 0x%016lx)", drive->fronts[i].info->name, drive->fronts[i].info->sign.quad);
+			size_t line_curr = printf("  %-12s (sign: 0x%016lx)", drive->fronts[i].names[0], drive->fronts[i].info->sign.quad);
 			for (size_t i = line_curr; i < line_pad; ++i) putchar(' ');
-			printf("%s\n", drive->fronts[i].info->desc);
+			printf("%s\n", drive->fronts[i].desc);
 		}
 
 		printf("\nAvailable backends:\n");
 		for (size_t i = 0; i < DRIVER_BACKS; ++i) {
-			size_t line_curr = printf("  %-12s (sign: 0x%016lx)", drive->backs[i].info->name, drive->backs[i].info->sign.quad);
+			size_t line_curr = printf("  %-12s (sign: 0x%016lx)", drive->backs[i].names[0], drive->backs[i].info->sign.quad);
 			for (size_t i = line_curr; i < line_pad; ++i) putchar(' ');
-			printf("%s\n", drive->backs[i].info->desc);
+			printf("%s\n", drive->backs[i].desc);
 		}
 	}
 }
@@ -116,9 +116,13 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 				if (!missing) {
 					for (size_t i = 0; i < DRIVER_FRONTS; ++i) {
 						assert(matchi->option.value.kind == OPT_VALUE_STRING);
-						if (strcasecmp(matchi->option.value.vstring, drive->fronts[i].info->name)) {
-							front = i;
-							break;
+						size_t name = 0;
+						while (drive->fronts[i].names[name] != NULL) {
+							if (strcasecmp(matchi->option.value.vstring, drive->fronts[i].names[name])) {
+								front = i;
+								break;
+							}
+							++name;
 						}
 					}
 
@@ -131,9 +135,13 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 				if (!missing) {
 					for (size_t i = 0; i < DRIVER_BACKS; ++i) {
 						assert(matchi->option.value.kind == OPT_VALUE_STRING);
-						if (strcasecmp(matchi->option.value.vstring, drive->backs[i].info->name)) {
-							back = i;
-							break;
+						size_t name = 0;
+						while (drive->backs[i].names[name] != NULL) {
+							if (strcasecmp(matchi->option.value.vstring, drive->backs[i].names[name])) {
+								back = i;
+								break;
+							}
+							++name;
 						}
 					}
 

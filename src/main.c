@@ -7,6 +7,7 @@
 #include "drive.h"
 
 #include "brainfuck.h"
+#include "fuckbees.h"
 #include "amd64.h"
 #include "amd64_asm.h"
 
@@ -26,11 +27,26 @@ int main(int argc, const char **argv) {
 
 	Driver drive = {
 		.fronts = {
-			{ &brainfuck_front, NULL },
+			{
+				.names = (const char *[]) { "brainfuck", NULL },
+				.desc = "Brainfuck frontend",
+				.info = &brainfuck_front,
+				.aux = NULL
+			},
+			{
+				.names = (const char *[]) { "fuckbees", NULL },
+				.desc = "fuckbeEs frontend",
+				.info = &fuckbees_front,
+				.aux = NULL
+			},
 		},
 		.backs = {
-			{ &amd64_asm_back, (void *)&amd64_asm_aux },
-			{ &amd64_back, NULL },
+			{
+				.names = (const char *[]) { "amd64_asm", "amd64", "x86_64", NULL },
+				.desc = "X86_64 assembly backend",
+				.info = &amd64_asm_back,
+				.aux = (void *)&amd64_asm_aux
+			},
 		},
 		.verbose = false,
 	};
