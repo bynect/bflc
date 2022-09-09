@@ -22,12 +22,23 @@ static void driver_error(const char *message) {
 
 static void driver_help(Driver *drive, Opt_Info *opts, size_t opts_len, Opt_Usage *usage) {
 	opt_info_help(opts, opts_len, NULL, NULL, usage, stdout);
+
 	if (drive->verbose) {
+		size_t line_pad = 46; // TODO: Improve here
+
 		printf("\nAvailable frontends:\n");
-		for (size_t i = 0; i < DRIVER_FRONTS; ++i) printf("  %s (sign: 0x%016lx)\n", drive->fronts[i].info->name, drive->fronts[i].info->sign.quad);
+		for (size_t i = 0; i < DRIVER_FRONTS; ++i) {
+			size_t line_curr = printf("  %-12s (sign: 0x%016lx)", drive->fronts[i].info->name, drive->fronts[i].info->sign.quad);
+			for (size_t i = line_curr; i < line_pad; ++i) putchar(' ');
+			printf("%s\n", drive->fronts[i].info->desc);
+		}
 
 		printf("\nAvailable backends:\n");
-		for (size_t i = 0; i < DRIVER_BACKS; ++i) printf("  %s (sign: 0x%016lx)\n", drive->backs[i].info->name, drive->backs[i].info->sign.quad);
+		for (size_t i = 0; i < DRIVER_BACKS; ++i) {
+			size_t line_curr = printf("  %-12s (sign: 0x%016lx)", drive->backs[i].info->name, drive->backs[i].info->sign.quad);
+			for (size_t i = line_curr; i < line_pad; ++i) putchar(' ');
+			printf("%s\n", drive->backs[i].info->desc);
+		}
 	}
 }
 
@@ -74,12 +85,6 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 		.line_max = 90,
 	};
 
-	if (result.simple == 0 && error.kind != OPT_ERROR_STOPPED) {
-		driver_error("Missing input file");
-		opt_info_usage(opts, FLAG_LAST, &usage, stderr);
-		return 1;
-	}
-
 	size_t back = 0;
 	size_t front = 0;
 
@@ -87,12 +92,13 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 	const char *out_path = NULL;
 
 	size_t match = 0;
-	while (match++ < result.matches_len) {
-		Opt_Match *matchi = &result.matches[match];
+	while (match < result.matches_len) {
+		Opt_Match *matchi = &result.matches[match++];
 
 		if (matchi->kind == OPT_MATCH_SIMPLE) {
 			// TODO: Improve simple match handling, also handle multiple files (?)
 			in_path = matchi->simple;
+			continue;
 		}
 
 		bool missing = matchi->kind == OPT_MATCH_MISSING;
@@ -153,7 +159,12 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 		}
 	}
 
-	assert(result.simple != 0 && in_path != NULL);
+	if (result.simple == 0 || in_path == NULL) {
+		driver_error("Missing input file");
+		opt_info_usage(opts, FLAG_LAST, &usage, stderr);
+		return 1;
+	}
+
 	if (out_path == NULL) {
 		// TODO: Calculate a name based on the input file, eg test.bf -> test.asm/test.o
 		out_path = "output";
