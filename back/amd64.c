@@ -283,9 +283,7 @@ void amd64_emit(Out_Channel *out, Bfir_Entry *entry, Back_Aux *aux) {
 }
 
 const Back_Info amd64_back = {
-	.name = "amd64",
-	.desc = "X86_64 machine code backend (only jit)",
-	.outs = BACK_JIT, // TODO: Add support for BACK_OBJ here or create a amd64_elf?
+	.outs = BACK_BIN | BACK_JIT, // TODO: Add support for BACK_OBJ here or create a amd64_elf?
 	.sign.quad = 0x8664000086640000,
 	.emit_f = amd64_emit,
 };

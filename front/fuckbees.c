@@ -53,8 +53,6 @@ void fuckbees_parse(In_Channel *in, Bfir_Entry *entry, Front_Aux *aux) {
 }
 
 const Front_Info brainfuck_front = {
-	.name = "fuckbees",
-	.desc = "FuckbeEs frontend",
 	.sign.quad = 0xffeeffee000000,
 	.parse_f = fuckbees_parse,
 };

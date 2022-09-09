@@ -53,8 +53,6 @@ void brainfuck_parse(In_Channel *in, Bfir_Entry *entry, Front_Aux *aux) {
 }
 
 const Front_Info brainfuck_front = {
-	.name = "brainfuck",
-	.desc = "Brainfuck frontend",
 	.sign.quad = 0xbbffbbff000000,
 	.parse_f = brainfuck_parse,
 };

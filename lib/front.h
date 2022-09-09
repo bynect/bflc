@@ -14,8 +14,6 @@ typedef struct {
 typedef void (Front_Parse_F)(In_Channel *in, Bfir_Entry *entry, Front_Aux *aux);
 
 typedef struct {
-	const char *name;
-	const char *desc;
 	Signature sign;
 	Front_Parse_F *parse_f;
 } Front_Info;
