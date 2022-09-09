@@ -5,7 +5,7 @@
 #include "front.h"
 #include "in.h"
 
-void brainfuck_parse(In_Channel *in, Bfir_Entry *entry, Front_Aux *aux) {
+void fuckbees_parse(In_Channel *in, Bfir_Entry *entry, Front_Aux *aux) {
 	assert(aux == NULL || aux->sign.quad == brainfuck_front.sign.quad);
 
 	uint8_t c;
@@ -13,35 +13,35 @@ void brainfuck_parse(In_Channel *in, Bfir_Entry *entry, Front_Aux *aux) {
 		Bfir_Instr instr;
 
 		switch (c) {
-			case '+':
+			case 'c':
 				bfir_instr_init(&instr, BFIR_ADD, 1);
 				break;
 
-			case '-':
+			case 'k':
 				bfir_instr_init(&instr, BFIR_ADD, -1);
 				break;
 
-			case '>':
+			case 'f':
 				bfir_instr_init(&instr, BFIR_ADDP, 1);
 				break;
 
-			case '<':
+			case 'u':
 				bfir_instr_init(&instr, BFIR_ADDP, -1);
 				break;
 
-			case ',':
+			case 'e':
 				bfir_instr_init(&instr, BFIR_READ, 1);
 				break;
 
-			case '.':
+			case 'b':
 				bfir_instr_init(&instr, BFIR_WRITE, 1);
 				break;
 
-			case '[':
+			case 'E':
 				bfir_instr_init(&instr, BFIR_JMPF, 0);
 				break;
 
-			case ']':
+			case 's':
 				bfir_instr_init(&instr, BFIR_JMPB, 0);
 				break;
 
@@ -53,8 +53,8 @@ void brainfuck_parse(In_Channel *in, Bfir_Entry *entry, Front_Aux *aux) {
 }
 
 const Front_Info brainfuck_front = {
-	.name = "brainfuck",
-	.desc = "Brainfuck frontend",
-	.sign.quad = 0xbbffbbff000000,
-	.parse_f = brainfuck_parse,
+	.name = "fuckbees",
+	.desc = "FuckbeEs frontend",
+	.sign.quad = 0xffeeffee000000,
+	.parse_f = fuckbees_parse,
 };
