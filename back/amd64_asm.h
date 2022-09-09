@@ -7,9 +7,10 @@
 typedef struct {
 	Back_Aux aux;
 	Label_Stack *stack;
+	size_t celln;
 } Amd64_Asm_Aux;
 
-void amd64_asm_aux_init(Amd64_Asm_Aux *aux, Label_Stack *stack);
+void amd64_asm_aux_init(Amd64_Asm_Aux *aux, Label_Stack *stack, size_t celln);
 
 void amd64_asm_emit(Out_Channel *out, Bfir_Entry *entry, Back_Aux *aux);
 

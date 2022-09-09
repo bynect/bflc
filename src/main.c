@@ -19,7 +19,7 @@ int main(int argc, const char **argv) {
 	label_stack_init(&stack, labels, labels_len);
 
 	Amd64_Asm_Aux amd64_asm_aux;
-	amd64_asm_aux_init(&amd64_asm_aux, &stack);
+	amd64_asm_aux_init(&amd64_asm_aux, &stack, 30000);
 
 	// TODO: amd64 can only be used to jit at the moment
 	//Amd64_Aux amd64_aux;
