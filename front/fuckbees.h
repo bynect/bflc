@@ -1,5 +1,5 @@
-#ifndef FUCKBEES_H
-#define FUCKBEES_H
+#ifndef FRONT_FUCKBEES_H
+#define FRONT_FUCKBEES_H
 
 #include "front.h"
 

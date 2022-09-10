@@ -1,5 +1,5 @@
-#ifndef BRAINFUCK_H
-#define BRAINFUCK_H
+#ifndef FRONT_BRAINFUCK_H
+#define FRONT_BRAINFUCK_H
 
 #include "front.h"
 
