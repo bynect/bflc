@@ -7,6 +7,7 @@
 
 enum {
 	FLAG_VERBOSE,
+	FLAG_DEBUG,
 	FLAG_HELP,
 	FLAG_VERSION,
 	FLAG_FRONT,
@@ -55,6 +56,7 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 
 	Opt_Info opts[FLAG_LAST];
 	opt_info_init(&opts[FLAG_VERBOSE], "verbose", "v", "Enable verbose output", OPT_VALUE_NONE, NULL, OPT_INFO_MATCH_FIRST);
+	opt_info_init(&opts[FLAG_DEBUG], "debug", "", "Enable debug output", OPT_VALUE_NONE, NULL, OPT_INFO_MATCH_FIRST);
 	opt_info_init(&opts[FLAG_HELP], "help", "h", "Show help information", OPT_VALUE_NONE, NULL, OPT_INFO_STOP_PARSER);
 	opt_info_init(&opts[FLAG_VERSION], "version", "", "Show version information", OPT_VALUE_NONE, NULL, OPT_INFO_STOP_PARSER);
 	opt_info_init(&opts[FLAG_FRONT], "frontend", "", "Set frontend", OPT_VALUE_STRING, NULL, OPT_INFO_MATCH_MISSING | OPT_INFO_MATCH_LAST);
@@ -93,6 +95,7 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 		if (matchi->kind == OPT_MATCH_SIMPLE) {
 			// TODO: Improve simple match handling, also handle multiple files (?)
 			in_path = matchi->simple;
+			if (drive->debug) printf("Set in_path to '%s'\n", in_path);
 			continue;
 		}
 
@@ -101,6 +104,11 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 
 		switch (opt) {
 			case FLAG_VERBOSE:
+				drive->verbose = true;
+				break;
+
+			case FLAG_DEBUG:
+				drive->debug = true;
 				drive->verbose = true;
 				break;
 
@@ -114,18 +122,24 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 
 			case FLAG_FRONT:
 				if (!missing) {
-					for (size_t i = 0; i < DRIVER_FRONTS; ++i) {
-						assert(matchi->option.value.kind == OPT_VALUE_STRING);
+					assert(matchi->option.value.kind == OPT_VALUE_STRING);
+					if (drive->verbose) printf("Searching '%s' frontend\n", matchi->option.value.vstring);
+
+					bool found = false;
+					for (size_t i = 0; i < DRIVER_FRONTS && !found; ++i) {
 						size_t name = 0;
 						while (drive->fronts[i].names[name] != NULL) {
-							if (strcasecmp(matchi->option.value.vstring, drive->fronts[i].names[name])) {
+							if (!strcasecmp(matchi->option.value.vstring, drive->fronts[i].names[name])) {
+								if (drive->debug) printf("Set frontend as %zu\n", i);
 								front = i;
+								found = true;
 								break;
 							}
 							++name;
 						}
 					}
 
+					if (found) break;
 					driver_error("Unknown frontend");
 					return 1;
 				}
@@ -133,18 +147,24 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 
 			case FLAG_BACK:
 				if (!missing) {
-					for (size_t i = 0; i < DRIVER_BACKS; ++i) {
-						assert(matchi->option.value.kind == OPT_VALUE_STRING);
+					assert(matchi->option.value.kind == OPT_VALUE_STRING);
+					if (drive->verbose) printf("Searching '%s' backend\n", matchi->option.value.vstring);
+
+					bool found = false;
+					for (size_t i = 0; i < DRIVER_BACKS && !found; ++i) {
 						size_t name = 0;
 						while (drive->backs[i].names[name] != NULL) {
-							if (strcasecmp(matchi->option.value.vstring, drive->backs[i].names[name])) {
+							if (!strcasecmp(matchi->option.value.vstring, drive->backs[i].names[name])) {
+								if (drive->debug) printf("Set backend as %zu\n", i);
 								back = i;
+								found = true;
 								break;
 							}
 							++name;
 						}
 					}
 
+					if (found) break;
 					driver_error("Unknown backend");
 					return 1;
 				}
@@ -154,6 +174,7 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 				if (!missing) {
 					assert(matchi->option.value.kind == OPT_VALUE_STRING);
 					out_path = matchi->option.value.vstring;
+					if (drive->debug) printf("Set out_path as '%s'\n", out_path);
 				}
 				break;
 
@@ -171,6 +192,7 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 	if (out_path == NULL) {
 		// TODO: Calculate a name based on the input file, eg test.bf -> test.asm/test.o
 		out_path = "output";
+		if (drive->debug) printf("No out_path specified, falling back to '%s'\n", out_path);
 	}
 
 	// TODO: Check absolute path
@@ -209,7 +231,7 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 	Out_Channel out_chan;
 	out_init_file(&out_chan, out_file);
 
-	drive->backs[front].info->emit_f(&out_chan, &entry, drive->backs[back].aux);
+	drive->backs[back].info->emit_f(&out_chan, &entry, drive->backs[back].aux);
 	fclose(out_file);
 
 	return 0;

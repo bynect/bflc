@@ -6,10 +6,12 @@
 #include "opt.h"
 #include "drive.h"
 
-#include "brainfuck.h"
-#include "fuckbees.h"
-#include "amd64.h"
-#include "amd64_asm.h"
+#include "front/brainfuck.h"
+#include "front/fuckbees.h"
+
+#include "back/amd64_asm.h"
+#include "back/amd64.h"
+#include "back/bfir.h"
 
 int main(int argc, const char **argv) {
 	const size_t labels_len = 256;

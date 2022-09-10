@@ -22,6 +22,7 @@ typedef struct {
 		Back_Aux *aux;
 	} backs[DRIVER_BACKS];
 	bool verbose;
+	bool debug;
 } Driver;
 
 int driver_run(Driver *drive, int argc, const char **argv);

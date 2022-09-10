@@ -1,5 +1,5 @@
-#ifndef AMD64_H
-#define AMD64_H
+#ifndef BACK_AMD64_H
+#define BACK_AMD64_H
 
 #include "back.h"
 #include "label.h"
