@@ -16,8 +16,9 @@ typedef struct {
 typedef enum {
 	AMD64_NONE,
 	AMD64_READ_SYSCALL = 1 << 0,
-	AMD64_WRITE_SYSCALL = 1 << 0,
+	AMD64_WRITE_SYSCALL = 1 << 1,
 	AMD64_SYSCALL = AMD64_READ_SYSCALL | AMD64_WRITE_SYSCALL,
+	AMD64_RELATIVE_CALL = 1 << 2,
 } Amd64_Flag;
 
 typedef struct {

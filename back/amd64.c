@@ -65,6 +65,9 @@ static const uint8_t amd64_mov_rax[] = { 0x48, 0xb8 };
 // call rax
 static const uint8_t amd64_call_rax[] = { 0xff, 0xd0 };
 
+// call (rel32)
+static const uint8_t amd64_call_rel[] = { 0xe8 };
+
 // syscall
 static const uint8_t amd64_syscall[] = { 0x0f, 0x05 };
 
@@ -109,7 +112,6 @@ static void amd64_instr(Out_Channel *out, Bfir_Instr *instr, Label_Stack *stack,
 
 	switch (instr->kind) {
 		case BFIR_ADD:
-			assert(instr->arg <= UINT8_MAX);
 			out_write(out, amd64_add, sizeof(amd64_add));
 			uint8_t arg = instr->arg;
 			out_write(out, &arg, 1);
@@ -121,7 +123,6 @@ static void amd64_instr(Out_Channel *out, Bfir_Instr *instr, Label_Stack *stack,
 				uint8_t arg = instr->arg;
 				out_write(out, &arg, 1);
 			} else {
-				assert(instr->arg <= UINT32_MAX);
 				out_write(out, amd64_add_rbx_32, sizeof(amd64_add_rbx_32));
 				uint32_t arg = instr->arg;
 				amd64_write32(out, arg);
@@ -147,9 +148,15 @@ static void amd64_instr(Out_Channel *out, Bfir_Instr *instr, Label_Stack *stack,
 
 				out_write(out, amd64_syscall, sizeof(amd64_syscall));
 			} else {
-				out_write(out, amd64_mov_rax, sizeof(amd64_mov_rax));
-				amd64_write64(out, (uint64_t)mem->getchar);
-				out_write(out, amd64_call_rax, sizeof(amd64_call_rax));
+				if (flags & AMD64_RELATIVE_CALL) {
+					out_write(out, amd64_call_rel, sizeof(amd64_call_rel));
+					uint32_t off = (uint64_t)mem->getchar - (uint64_t)(out->buffer->bytes + out->buffer->len + 4);
+					amd64_write32(out, off);
+				} else {
+					out_write(out, amd64_mov_rax, sizeof(amd64_mov_rax));
+					amd64_write64(out, (uint64_t)mem->getchar);
+					out_write(out, amd64_call_rax, sizeof(amd64_call_rax));
+				}
 				out_write(out, amd64_mov_rbx_al, sizeof(amd64_mov_rbx_al));
 			}
 			break;
@@ -174,9 +181,15 @@ static void amd64_instr(Out_Channel *out, Bfir_Instr *instr, Label_Stack *stack,
 				out_write(out, amd64_syscall, sizeof(amd64_syscall));
 			} else {
 				out_write(out, amd64_movzx_edi_rbx, sizeof(amd64_movzx_edi_rbx));
-				out_write(out, amd64_mov_rax, sizeof(amd64_mov_rax));
-				amd64_write64(out, (uint64_t)mem->putchar);
-				out_write(out, amd64_call_rax, sizeof(amd64_call_rax));
+				if (flags & AMD64_RELATIVE_CALL) {
+					out_write(out, amd64_call_rel, sizeof(amd64_call_rel));
+					uint32_t off = (uint64_t)mem->putchar - (uint64_t)(out->buffer->bytes + out->buffer->len + 4);
+					amd64_write32(out, off);
+				} else {
+					out_write(out, amd64_mov_rax, sizeof(amd64_mov_rax));
+					amd64_write64(out, (uint64_t)mem->putchar);
+					out_write(out, amd64_call_rax, sizeof(amd64_call_rax));
+				}
 			}
 			break;
 
@@ -197,7 +210,7 @@ static void amd64_instr(Out_Channel *out, Bfir_Instr *instr, Label_Stack *stack,
 	}
 }
 
-void amd64_labels(Bfir_Entry *entry, Label_Stack *stack, Amd64_Flag flags) {
+uint32_t amd64_compute(Bfir_Entry *entry, Label_Stack *stack, Amd64_Flag flags) {
 	uint32_t ip = sizeof(amd64_prologue) + 8;
 	uint32_t target = 0;
 
@@ -207,22 +220,32 @@ void amd64_labels(Bfir_Entry *entry, Label_Stack *stack, Amd64_Flag flags) {
 	while (true) {
 		switch (instr->kind) {
 			case BFIR_ADD:
+				assert(instr->arg <= UINT8_MAX);
 				ip += sizeof(amd64_add) + 1;
 				break;
 
 			case BFIR_ADDP:
+				assert(instr->arg <= UINT32_MAX);
 				if (instr->arg <= UINT8_MAX) ip += sizeof(amd64_add_rbx_8) + 1;
 				else ip += sizeof(amd64_add_rbx_32) + 4;
 				break;
 
 			case BFIR_READ:
 				if (flags & AMD64_READ_SYSCALL) ip += syscall;
-				else ip += sizeof(amd64_mov_rax) + 8 + sizeof(amd64_call_rax) + sizeof(amd64_mov_rbx_al);
+				else {
+					if (flags & AMD64_RELATIVE_CALL) ip += sizeof(amd64_call_rel) + 4;
+					else ip += sizeof(amd64_mov_rax) + 8 + sizeof(amd64_call_rax);
+					ip += sizeof(amd64_mov_rbx_al);
+				}
 				break;
 
 			case BFIR_WRITE:
 				if (flags & AMD64_WRITE_SYSCALL) ip += syscall;
-				else ip += sizeof(amd64_movzx_edi_rbx) + sizeof(amd64_mov_rax) + 8 + sizeof(amd64_call_rax);
+				else {
+					ip += sizeof(amd64_movzx_edi_rbx);
+					if (flags & AMD64_RELATIVE_CALL) ip += sizeof(amd64_call_rel) + 4;
+					else ip += sizeof(amd64_mov_rax) + 8 + sizeof(amd64_call_rax);
+				}
 				break;
 
 			case BFIR_JMPF:
@@ -246,11 +269,17 @@ void amd64_labels(Bfir_Entry *entry, Label_Stack *stack, Amd64_Flag flags) {
 		if (instr->next == 0) break;
 		instr = bfir_entry_get(entry, instr->next);
 	}
+
+	return ip + sizeof(amd64_epilogue);
 }
 
 static void amd64_entry(Out_Channel *out, Bfir_Entry *entry, Label_Stack *stack, Amd64_Layout *mem, Amd64_Flag flags) {
-	amd64_labels(entry, stack, flags);
+	uint32_t ip = amd64_compute(entry, stack, flags);
 	label_stack_reverse(stack);
+
+	// For relative addressing there must be no reallocation
+	if (flags & AMD64_RELATIVE_CALL) assert(out->kind == OUT_BUFFER && "Relative addressing works only in memory");
+	if (out->kind == OUT_BUFFER) byte_buffer_ensure(out->buffer, ip);
 
 	out_write(out, amd64_prologue, sizeof(amd64_prologue));
 	amd64_write64(out, (uint64_t)mem->cells);
@@ -283,7 +312,6 @@ void amd64_emit(Out_Channel *out, Bfir_Entry *entry, Back_Aux *aux) {
 }
 
 const Back_Info amd64_back = {
-	.outs = BACK_BIN | BACK_JIT, // TODO: Add support for BACK_OBJ here or create a amd64_elf?
 	.sign.quad = 0x8664000086640000,
 	.emit_f = amd64_emit,
 };

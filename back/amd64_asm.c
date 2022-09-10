@@ -125,7 +125,6 @@ void amd64_asm_emit(Out_Channel *out, Bfir_Entry *entry, Back_Aux *aux) {
 }
 
 const Back_Info amd64_asm_back = {
-	.outs = BACK_ASM,
 	.sign.quad = 0x866400008664aaaa,
 	.emit_f = amd64_asm_emit,
 };
