@@ -49,8 +49,15 @@ int main(int argc, const char **argv) {
 				.info = &amd64_asm_back,
 				.aux = (void *)&amd64_asm_aux
 			},
+			{
+				.names = (const char *[]) { "bfir", "ir", NULL },
+				.desc = "Brainfuck-like Intermediate Representation",
+				.info = &bfir_back,
+				.aux = NULL,
+			},
 		},
 		.verbose = false,
+		.debug = false,
 	};
 
 	return driver_run(&drive, argc, argv);
