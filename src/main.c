@@ -58,6 +58,7 @@ int main(int argc, const char **argv) {
 		},
 		.verbose = false,
 		.debug = false,
+		.cell_n = 30000,
 	};
 
 	return driver_run(&drive, argc, argv);

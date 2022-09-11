@@ -23,10 +23,11 @@ typedef struct {
 	} backs[DRIVER_BACKS];
 	bool verbose;
 	bool debug;
+	size_t cell_n;
 } Driver;
 
 int driver_run(Driver *drive, int argc, const char **argv);
 
-void driver_error(const char *message);
+void driver_error(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 
 #endif

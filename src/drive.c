@@ -1,18 +1,20 @@
 #include <strings.h>
 #include <string.h>
 #include <assert.h>
+#include <stdarg.h>
 
 #include "drive.h"
 #include "opt.h"
 
 enum {
-	FLAG_VERBOSE,
 	FLAG_DEBUG,
+	FLAG_VERBOSE,
 	FLAG_HELP,
 	FLAG_VERSION,
 	FLAG_FRONT,
 	FLAG_BACK,
 	FLAG_OUT,
+	FLAG_CELLN,
 	FLAG_LAST,
 };
 
@@ -42,10 +44,21 @@ static void driver_version(Driver *drive) {
 	printf("version x.x.x\n");
 }
 
+static void driver_print_opt(FILE *stream, size_t opt, Opt_Info *opts, size_t opts_len) {
+	assert(opt < opts_len);
+	if (opts[opt].long_len != 0) {
+		fprintf(stream, "--%s", opts[opt].long_name);
+		if (opts[opt].short_len != 0) fprintf(stream, ", ");
+	}
+
+	if (opts[opt].short_len != 0) fprintf(stream, "-%s", opts[opt].short_name);
+}
+
 int driver_run(Driver *drive, int argc, const char **argv) {
 	const size_t matches_len = 64;
 	Opt_Match matches[matches_len];
 
+	// TODO: Handle in a better way
 	if (argc > matches_len) {
 		driver_error("Too many arguments");
 		return 1;
@@ -55,32 +68,67 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 	opt_result_init(&result, matches, matches_len);
 
 	Opt_Info opts[FLAG_LAST];
-	opt_info_init(&opts[FLAG_VERBOSE], "verbose", "v", "Enable verbose output", OPT_VALUE_NONE, NULL, OPT_INFO_MATCH_FIRST);
 	opt_info_init(&opts[FLAG_DEBUG], "debug", "", "Enable debug output", OPT_VALUE_NONE, NULL, OPT_INFO_MATCH_FIRST);
+	opt_info_init(&opts[FLAG_VERBOSE], "verbose", "v", "Enable verbose output", OPT_VALUE_NONE, NULL, OPT_INFO_MATCH_FIRST);
 	opt_info_init(&opts[FLAG_HELP], "help", "h", "Show help information", OPT_VALUE_NONE, NULL, OPT_INFO_STOP_PARSER);
 	opt_info_init(&opts[FLAG_VERSION], "version", "", "Show version information", OPT_VALUE_NONE, NULL, OPT_INFO_STOP_PARSER);
 	opt_info_init(&opts[FLAG_FRONT], "frontend", "", "Set frontend", OPT_VALUE_STRING, NULL, OPT_INFO_MATCH_MISSING | OPT_INFO_MATCH_LAST);
 	opt_info_init(&opts[FLAG_BACK], "backend", "", "Set backend", OPT_VALUE_STRING, NULL, OPT_INFO_MATCH_MISSING | OPT_INFO_MATCH_LAST);
 	opt_info_init(&opts[FLAG_OUT], "", "o", "Set output file name", OPT_VALUE_STRING, NULL, OPT_INFO_MATCH_MISSING | OPT_INFO_MATCH_LAST);
+	opt_info_init(&opts[FLAG_CELLN], "cell", "", "Set cell number", OPT_VALUE_INT, NULL, OPT_INFO_MATCH_MISSING | OPT_INFO_STOP_DUPLICATE);
 
 	Opt_Parser parser;
 	opt_parser_init(&parser, opts, FLAG_LAST);
 
-	Opt_Error error = opt_parser_run(&parser, &result, argv, argc);
-	if (error.kind != OPT_ERROR_NONE && error.kind != OPT_ERROR_STOPPED) {
-		driver_error("Failed to parse arguments");
-		return 1;
-	}
-
-	opt_result_sort(&result, true);
+	const char *value_kinds[] = {
+		"",
+		"string",
+		"int",
+		"float"
+		"bool",
+	};
 
 	const char *args[] = { "file" };
 	Opt_Usage usage = {
-		.name = result.bin_name,
+		.name = argv[0],
 		.args = args,
 		.args_len = 1,
 		.line_max = 90,
 	};
+
+	Opt_Error error = opt_parser_run(&parser, &result, argv, argc);
+	switch (error.kind) {
+		case OPT_ERROR_NONE:
+		case OPT_ERROR_STOPPED:
+			break;
+
+		case OPT_ERROR_UNKNOWN_OPTION:
+			driver_error("Unknown option '%s'\n", error.unknown_opt);
+			opt_info_usage(opts, FLAG_LAST, &usage, stderr);
+			return 1;
+
+		case OPT_ERROR_DUPLICATE_OPTION:
+			driver_error("Invalid duplicate option '");
+			driver_print_opt(stderr, error.duplicate.opt, opts, FLAG_LAST);
+			fprintf(stderr, "'\n");
+			return 1;
+
+		case OPT_ERROR_MISSING_VALUE:
+			driver_error("Missing required %s value for option '", value_kinds[error.missing.expected_value]);
+			driver_print_opt(stderr, error.duplicate.opt, opts, FLAG_LAST);
+			fprintf(stderr, "'\n");
+			return 1;
+
+		case OPT_ERROR_INVALID_VALUE:
+			driver_error("Invalid value '%s', %s was expected\n", error.invalid.base, value_kinds[error.invalid.expected_value]);
+			return 1;
+
+		default:
+			driver_error("Failed to parse arguments\n");
+			return 1;
+	}
+
+	opt_result_sort(&result, true);
 
 	size_t back = 0;
 	size_t front = 0;
@@ -103,12 +151,12 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 		size_t opt = missing ? matchi->missing_opt : matchi->option.opt;
 
 		switch (opt) {
-			case FLAG_VERBOSE:
+			case FLAG_DEBUG:
+				drive->debug = true;
 				drive->verbose = true;
 				break;
 
-			case FLAG_DEBUG:
-				drive->debug = true;
+			case FLAG_VERBOSE:
 				drive->verbose = true;
 				break;
 
@@ -140,7 +188,12 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 					}
 
 					if (found) break;
-					driver_error("Unknown frontend");
+					driver_error("Unknown frontend '%s'\n", matchi->option.value.vstring);
+					if (drive->verbose) {
+						fprintf(stderr, "Available frontends: ");
+						for (size_t i = 0; i < DRIVER_FRONTS - 1; ++i) fprintf(stderr, "%s, ", drive->fronts[i].names[0]);
+						fprintf(stderr, "%s\n", drive->fronts[DRIVER_FRONTS - 1].names[0]);
+					}
 					return 1;
 				}
 				break;
@@ -165,7 +218,12 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 					}
 
 					if (found) break;
-					driver_error("Unknown backend");
+					driver_error("Unknown backend '%s'\n", matchi->option.value.vstring);
+					if (drive->verbose) {
+						fprintf(stderr, "Available backends: ");
+						for (size_t i = 0; i < DRIVER_BACKS - 1; ++i) fprintf(stderr, "%s, ", drive->backs[i].names[0]);
+						fprintf(stderr, "%s\n", drive->backs[DRIVER_BACKS - 1].names[0]);
+					}
 					return 1;
 				}
 				break;
@@ -178,13 +236,21 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 				}
 				break;
 
+			case FLAG_CELLN:
+				if (!missing) {
+					assert(matchi->option.value.kind == OPT_VALUE_INT);
+					drive->cell_n = matchi->option.value.vint;
+					if (drive->debug) printf("Set cell_n as '%zu'\n", drive->cell_n);
+				}
+				break;
+
 			default:
 				break;
 		}
 	}
 
 	if (result.simple == 0 || in_path == NULL) {
-		driver_error("Missing input file");
+		driver_error("No input file specified\n");
 		opt_info_usage(opts, FLAG_LAST, &usage, stderr);
 		return 1;
 	}
@@ -197,13 +263,13 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 
 	// TODO: Check absolute path
 	if (!strcmp(out_path, in_path)) {
-		driver_error("Output file is the same as input file");
+		driver_error("Output and input file are the same '%s'\n", in_path);
 		return 1;
 	}
 
 	FILE *in_file = fopen(in_path, "rb");
 	if (in_file == NULL) {
-		driver_error("Failed to open input file");
+		driver_error("Failed to open input file '%s'\n", in_path);
 		return 1;
 	}
 
@@ -224,7 +290,7 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 
 	FILE *out_file = fopen(out_path, "wb");
 	if (out_file == NULL) {
-		driver_error("Failed to open output file");
+		driver_error("Failed to open output file '%s'\n", out_path);
 		return 1;
 	}
 
@@ -237,8 +303,13 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 	return 0;
 }
 
-void driver_error(const char *message) {
+void driver_error(const char *fmt, ...) {
 	const char *red = "\x1b[31m";
 	const char *reset = "\x1b[0m";
-	fprintf(stderr, "%serror%s: %s\n", red, reset, message);
+	fprintf(stderr, "%serror%s: ", red, reset);
+
+	va_list args;
+	va_start(args, fmt);
+	vfprintf(stderr, fmt, args);
+	va_end(args);
 }
