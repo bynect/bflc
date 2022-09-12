@@ -8,6 +8,7 @@
 
 #include "front/brainfuck.h"
 #include "front/fuckbees.h"
+#include "front/bfir.h"
 
 #include "back/amd64_asm.h"
 #include "back/amd64.h"
@@ -40,6 +41,12 @@ int main(int argc, const char **argv) {
 				.desc = "fuckbeEs frontend",
 				.info = &fuckbees_front,
 				.aux = NULL
+			},
+			{
+				.names = (const char *[]) { "bfir", NULL },
+				.desc = "bfir frontend",
+				.info = &bfir_front,
+				.aux = NULL,
 			},
 		},
 		.backs = {

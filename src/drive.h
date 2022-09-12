@@ -5,7 +5,7 @@
 #include "back.h"
 #include "front.h"
 
-#define DRIVER_FRONTS 2
+#define DRIVER_FRONTS 3
 #define DRIVER_BACKS 2
 
 typedef struct {
