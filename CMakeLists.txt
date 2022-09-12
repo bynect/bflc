@@ -25,6 +25,7 @@ list(APPEND COMPILER_SRC ${FRONT_SRC} ${BACK_SRC})
 
 add_executable(bflc_bin ${COMPILER_SRC})
 set_target_properties(bflc_bin PROPERTIES OUTPUT_NAME bflc)
+target_compile_definitions(bflc_bin PRIVATE VERSION="${CMAKE_PROJECT_VERSION}")
 
 target_link_libraries(bflc_bin PRIVATE bflc)
 target_include_directories(bflc_bin PRIVATE .)
@@ -58,7 +59,7 @@ check_symbol_exists(munmap "sys/mman.h" WITH_MUNMAP)
 check_symbol_exists(mremap "sys/mman.h" WITH_MREMAP)
 
 if(WITH_MMAP AND WITH_MUNMAP)
-	list(APPEND EXAMPLE_SRC docs/jit/example.c)
+	list(APPEND EXAMPLE_SRC jit/example.c)
 	aux_source_directory(${FRONT_DIR} FRONT_SRC)
 	aux_source_directory(${BACK_DIR} BACK_SRC)
 	list(APPEND EXAMPLE_SRC ${FRONT_SRC} ${BACK_SRC})

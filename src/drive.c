@@ -41,7 +41,7 @@ static void driver_help(Driver *drive, Opt_Info *opts, size_t opts_len, Opt_Usag
 }
 
 static void driver_version(Driver *drive) {
-	printf("version x.x.x\n");
+	printf("bflc %s\n", VERSION);
 }
 
 static void driver_print_opt(FILE *stream, size_t opt, Opt_Info *opts, size_t opts_len) {
