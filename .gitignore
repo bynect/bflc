@@ -1,2 +1,5 @@
 *.old
 *.bin
+*.o
+*.a
+_build
