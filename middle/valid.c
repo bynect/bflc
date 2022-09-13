@@ -4,12 +4,11 @@
 
 Error valid_pass(Bfir_Entry *entry, Middle_Aux *aux) {
 	assert(aux == NULL || aux->sign.quad == valid_middle.sign.quad);
-	//if (entry->head == 0) return;
 
 	Error error = { NULL };
-
 	uint32_t level = 0;
 
+	if (entry->head == 0) return error;
 	Bfir_Instr *instr = bfir_entry_get(entry, entry->head);
 	while (true) {
 		switch (instr->kind) {
@@ -42,7 +41,7 @@ Error valid_pass(Bfir_Entry *entry, Middle_Aux *aux) {
 		instr = bfir_entry_get(entry, instr->next);
 	}
 
-	assert(level == 0 && "Unpaired jumps");
+	if (level != 0) error.msg = "Unpaired jumps";
 	return error;
 }
 

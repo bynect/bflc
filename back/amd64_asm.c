@@ -61,7 +61,7 @@ static void amd64_asm_instr(Out_Channel *out, Bfir_Instr *instr, Label_Stack *st
 			break;
 
 		case BFIR_JMPB:
-			assert(label_stack_pop(stack, &label) == true && "Unpaired jumps");
+			assert(label_stack_pop(stack, &label) && "Unpaired jumps");
 			out_print(out, "\tjmp .L%uf\n", label);
 			out_print(out, ".L%ub:\n", label);
 			break;
@@ -90,13 +90,15 @@ static void amd64_asm_entry(Out_Channel *out, Bfir_Entry *entry, Label_Stack *st
 	out_print(out, "\tpush rbx\n");
 	out_print(out, "\tmov %s, __cells\n", amd64_cellp);
 
-	Label_Id fresh = 0;
-	Bfir_Instr *instr = bfir_entry_get(entry, entry->head);
+	if (entry->head != 0) {
+		Label_Id fresh = 0;
 
-	while (true) {
-		amd64_asm_instr(out, instr, stack, &fresh, flags);
-		if (instr->next == 0) break;
-		instr = bfir_entry_get(entry, instr->next);
+		Bfir_Instr *instr = bfir_entry_get(entry, entry->head);
+		while (true) {
+			amd64_asm_instr(out, instr, stack, &fresh, flags);
+			if (instr->next == 0) break;
+			instr = bfir_entry_get(entry, instr->next);
+		}
 	}
 
 	assert(stack->len == 0 && "Unpaired jumps");

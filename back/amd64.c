@@ -306,19 +306,21 @@ uint32_t amd64_compute(Bfir_Entry *entry, Label_Stack *stack1, Label_Stack *stac
 static void amd64_entry(Out_Channel *out, Bfir_Entry *entry, Amd64_Aux *aux) {
 	uint32_t ip = amd64_compute(entry, aux->stack1, aux->stack2, aux->flags);
 
-	// For relative addressing there must be no reallocation
 	// XXX: Check if the computed ip is valid
 	if (aux->flags & AMD64_RELATIVE_CALL) assert(out->kind == OUT_BUFFER && "Relative addressing works only in memory");
+	// For relative addressing there must be no reallocation
 	if (out->kind == OUT_BUFFER) byte_buffer_ensure(out->buffer, ip);
 
 	out_write(out, amd64_prologue, sizeof(amd64_prologue));
 	amd64_write64(out, (uint64_t)aux->mem->cells);
 
-	Bfir_Instr *instr = bfir_entry_get(entry, entry->head);
-	while (true) {
-		amd64_instr(out, instr, aux->stack1, aux->mem, aux->flags);
-		if (instr->next == 0) break;
-		instr = bfir_entry_get(entry, instr->next);
+	if (entry->head != 0) {
+		Bfir_Instr *instr = bfir_entry_get(entry, entry->head);
+		while (true) {
+			amd64_instr(out, instr, aux->stack1, aux->mem, aux->flags);
+			if (instr->next == 0) break;
+			instr = bfir_entry_get(entry, instr->next);
+		}
 	}
 
 	out_write(out, amd64_epilogue, sizeof(amd64_epilogue));
@@ -341,7 +343,7 @@ Error amd64_emit(Out_Channel *out, Bfir_Entry *entry, Back_Aux *aux) {
 	assert(aux->sign.quad == amd64_back.sign.quad);
 	amd64_entry(out, entry, (Amd64_Aux *)aux);
 
-	// TODO: Implement error handling
+	// TODO: Improve
 	Error error = { NULL };
 	return error;
 }
