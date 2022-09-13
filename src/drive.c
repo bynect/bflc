@@ -5,6 +5,7 @@
 
 #include "drive.h"
 #include "opt.h"
+#include "middle/valid.h"
 
 enum {
 	DRIVE_OPT_DEBUG,
@@ -15,6 +16,7 @@ enum {
 	DRIVE_OPT_BACK,
 	DRIVE_OPT_FRONT_ALT,
 	DRIVE_OPT_BACK_ALT,
+	DRIVE_OPT_VALIDATE,
 	DRIVE_OPT_OUT,
 	DRIVE_OPT_READ_SYSCALL,
 	DRIVE_OPT_WRITE_SYSCALL,
@@ -101,9 +103,12 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 	opt_info_init(&opts[DRIVE_OPT_VERSION], "version", "", "Show version information", OPT_VALUE_NONE, NULL, OPT_INFO_STOP_PARSER);
 
 	opt_info_init(&opts[DRIVE_OPT_FRONT], "frontend", "", "Set frontend", OPT_VALUE_STRING, NULL, OPT_INFO_MATCH_MISSING | OPT_INFO_MATCH_LAST);
+	opt_info_init(&opts[DRIVE_OPT_FRONT], "frontend", "", "Set frontend", OPT_VALUE_STRING, NULL, OPT_INFO_MATCH_MISSING | OPT_INFO_MATCH_LAST);
 	opt_info_init(&opts[DRIVE_OPT_BACK], "backend", "", "Set backend", OPT_VALUE_STRING, NULL, OPT_INFO_MATCH_MISSING | OPT_INFO_MATCH_LAST);
 	opt_info_init(&opts[DRIVE_OPT_FRONT_ALT], "front", "", "Set frontend", OPT_VALUE_STRING, NULL, OPT_INFO_MATCH_MISSING | OPT_INFO_MATCH_LAST);
 	opt_info_init(&opts[DRIVE_OPT_BACK_ALT], "back", "", "Set backend", OPT_VALUE_STRING, NULL, OPT_INFO_MATCH_MISSING | OPT_INFO_MATCH_LAST);
+
+	opt_info_init(&opts[DRIVE_OPT_VALIDATE], "validate", "", "Override default validation setting", OPT_VALUE_BOOL, NULL, OPT_INFO_STOP_DUPLICATE);
 	opt_info_init(&opts[DRIVE_OPT_OUT], "", "o", "Set output file name", OPT_VALUE_STRING, "FILE", OPT_INFO_MATCH_MISSING | OPT_INFO_MATCH_LAST);
 
 	opt_info_init(&opts[DRIVE_OPT_READ_SYSCALL], "", "fread", "Use read syscall", OPT_VALUE_NONE, NULL, OPT_INFO_MATCH_FIRST);
@@ -213,7 +218,7 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 						size_t name = 0;
 						while (drive->fronts[i].names[name] != NULL) {
 							if (!strcasecmp(matchi->option.value.vstring, drive->fronts[i].names[name])) {
-								if (drive->debug) printf("Set frontend as %zu\n", i);
+								if (drive->debug) printf("Set frontend to %zu\n", i);
 								front = i;
 								found = true;
 								break;
@@ -244,7 +249,7 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 						size_t name = 0;
 						while (drive->backs[i].names[name] != NULL) {
 							if (!strcasecmp(matchi->option.value.vstring, drive->backs[i].names[name])) {
-								if (drive->debug) printf("Set backend as %zu\n", i);
+								if (drive->debug) printf("Set backend to %zu\n", i);
 								back = i;
 								found = true;
 								break;
@@ -264,11 +269,18 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 				}
 				break;
 
+			case DRIVE_OPT_VALIDATE:
+				assert(!missing);
+				assert(matchi->option.value.kind == OPT_VALUE_BOOL);
+				drive->validate = matchi->option.value.vbool;
+				if (drive->debug) printf("Set validate to %s\n", drive->validate ? "true" : "false");
+				break;
+
 			case DRIVE_OPT_OUT:
 				if (!missing) {
 					assert(matchi->option.value.kind == OPT_VALUE_STRING);
 					out_path = matchi->option.value.vstring;
-					if (drive->debug) printf("Set out_path as '%s'\n", out_path);
+					if (drive->debug) printf("Set out_path to '%s'\n", out_path);
 				}
 				break;
 
@@ -295,7 +307,7 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 				assert(!missing);
 				assert(matchi->option.value.kind == OPT_VALUE_INT);
 				drive->cell_n = matchi->option.value.vint;
-				if (drive->debug) printf("Set cell_n as '%zu'\n", drive->cell_n);
+				if (drive->debug) printf("Set cell_n to '%zu'\n", drive->cell_n);
 				break;
 
 			default:
@@ -309,15 +321,16 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 		return 1;
 	}
 
+	char path_buf[4096];
 	if (out_path == NULL) {
-		char path_buf[4096];
-		size_t len = driver_strip_ext(in_path, path_buf, sizeof(path_buf));
-
 		const char *file_ext = drive->backs[back].file_ext;
-		memcpy(path_buf + len, file_ext, strlen(file_ext));
-		path_buf[len + strlen(file_ext)] = '\0';
+		if (file_ext != NULL) {
+			size_t len = driver_strip_ext(in_path, path_buf, sizeof(path_buf));
+			memcpy(path_buf + len, file_ext, strlen(file_ext));
+			path_buf[len + strlen(file_ext)] = '\0';
+			out_path = path_buf;
+		} else out_path = "output";
 
-		out_path = path_buf;
 		if (drive->debug) printf("No out_path specified, falling back to '%s'\n", out_path);
 	}
 
@@ -347,6 +360,8 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 
 	drive->fronts[front].info->parse_f(&in_chan, &entry, drive->fronts[front].aux);
 	fclose(in_file);
+
+	if (drive->validate) valid_middle.pass_f(&entry, NULL);
 
 	FILE *out_file = fopen(out_path, "wb");
 	if (out_file == NULL) {

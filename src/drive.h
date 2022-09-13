@@ -43,6 +43,7 @@ typedef struct {
 	} backs[DRIVE_BACK_LAST];
 	bool verbose;
 	bool debug;
+	bool validate;
 	size_t cell_n;
 } Driver;
 
