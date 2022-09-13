@@ -37,7 +37,10 @@ The compiler is a terminal interface for the [blfc library](#library).
 - `--front=STRING` Alternative name for `--frontend` option
 - `--back=STRING` Alternative name for `--backend` option
 - `-o` Set output file path. The default is `output`
-- `--cell=INT` Set the number of cell to pass to the backend
+- `-fread` Use read syscall (not available in all backends)
+- `-fwrite` Use write syscall (not available in all backends)
+- `-fsyscall` Equivalent to `-fread` and `-fwrite`
+- `-fcell=INT` Set the number of cells (default is `30000`)
 
 ### Example
 
