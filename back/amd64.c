@@ -276,7 +276,7 @@ uint32_t amd64_compute(Bfir_Entry *entry, Label_Stack *stack1, Label_Stack *stac
 				break;
 
 			case BFIR_JMPB:
-				label_stack_pop(stack2, &label);
+				assert(label_stack_pop(stack2, &label));
 				uint32_t target = stack1->labels[label];
 				ip += sizeof(amd64_jmp) + 4;
 

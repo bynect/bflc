@@ -37,7 +37,7 @@ int main(int argc, const char **argv) {
 	in_init_file(&in, file);
 
 	// Init IR instruction pool
-	const size_t instrs_len = 1024;
+	const size_t instrs_len = 4096;
 	Bfir_Instr instrs[instrs_len];
 
 	Bfir_Pool pool;
@@ -51,7 +51,7 @@ int main(int argc, const char **argv) {
 	if (file != stdin) fclose(file);
 
 	// Init x86_64 backend
-	const size_t labels_len = 256;
+	const size_t labels_len = 1024;
 	Label_Id labels[labels_len];
 
 	Label_Stack stack1;

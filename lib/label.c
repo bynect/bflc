@@ -11,6 +11,7 @@ void label_stack_init(Label_Stack *stack, Label_Id *labels, size_t size) {
 }
 
 void label_stack_push(Label_Stack *stack, Label_Id label) {
+	assert(stack->len + 1 < stack->size);
 	stack->labels[stack->len++] = label;
 }
 

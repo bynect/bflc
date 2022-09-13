@@ -13,6 +13,15 @@ set(BACK_DIR back)
 set(FRONT_DIR front)
 set(OPT_DIR opt)
 
+# Global settings
+add_compile_definitions(BFLC_VERSION="${CMAKE_PROJECT_VERSION}")
+set_property(GLOBAL PROPERTY C_STANDARD 99)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+	add_compile_options(-fsanitize=address)
+	add_link_options(-fsanitize=address)
+endif()
+
 # Build bflc library (libbflc.a)
 aux_source_directory(${LIBRARY_DIR} LIBRARY_SRC)
 add_library(bflc STATIC ${LIBRARY_SRC})
@@ -68,7 +77,3 @@ if(WITH_MMAP AND WITH_MUNMAP)
 	target_include_directories(jit_example PRIVATE .)
 	target_include_directories(jit_example PRIVATE ${LIBRARY_DIR})
 endif()
-
-# Global settings
-add_compile_definitions(BFLC_VERSION="${CMAKE_PROJECT_VERSION}")
-set_property(GLOBAL PROPERTY C_STANDARD 99)
