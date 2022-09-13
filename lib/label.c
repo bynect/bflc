@@ -20,6 +20,12 @@ bool label_stack_pop(Label_Stack *stack, Label_Id *label) {
 	return true;
 }
 
+bool label_stack_peek(Label_Stack *stack, Label_Id *label) {
+	if (stack->len == 0) return false;
+	*label = stack->labels[stack->len - 1];
+	return true;
+}
+
 void label_stack_reverse(Label_Stack *stack) {
 	for (size_t l = 0, h = stack->len - 1; l < h; l++, h--) {
 		Label_Id tmp = stack->labels[l];

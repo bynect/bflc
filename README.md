@@ -44,6 +44,11 @@ The compiler is a terminal interface for the [blfc library](#library).
 bflc echo.bf -o echo.asm
 ```
 
+### Note
+
+The `amd64` backend is not supported at the moment.
+To create x86\_64 executables assemble the output of `amd64_asm`.
+
 ## Library
 
 The framework is by default built as a standalone static library `libbflc.a`,
@@ -53,13 +58,13 @@ so you must compile them separately.
 
 ### Supported frontends
 
-- [Brainfuck][brainfuck] ([`brainfuck`](/front/brainfuck.c))
-- [FuckbeEs][fuckbees] ([`fuckbees`](/front/fuckbees.c)
+- [Brainfuck][brainfuck] frontend ([`brainfuck`](/front/brainfuck.c))
+- [FuckbeEs][fuckbees] frontend ([`fuckbees`](/front/fuckbees.c))
 
 ### Supported backends
 
-- [x86\_64 assembly](x64-asm) ([`amd64\_asm`](/back/amd64_asm.c)):
-- [x86\_64 machine code](x64-mach) ([`amd64`](/back/amd64.c))
+- [X86\_64 assembly](x64-asm) backend, uses NASM syntax ([`amd64_asm`](/back/amd64_asm.c)):
+- [X86\_64 machine code](x64-mach) backend, only for JIT-ing ([`amd64`](/back/amd64.c))
 
 ### Jit integration
 
