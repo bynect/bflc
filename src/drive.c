@@ -7,15 +7,18 @@
 #include "opt.h"
 
 enum {
-	FLAG_DEBUG,
-	FLAG_VERBOSE,
-	FLAG_HELP,
-	FLAG_VERSION,
-	FLAG_FRONT,
-	FLAG_BACK,
-	FLAG_OUT,
-	FLAG_CELLN,
-	FLAG_LAST,
+	DRIVE_OPT_DEBUG,
+	DRIVE_OPT_VERBOSE,
+	DRIVE_OPT_HELP,
+	DRIVE_OPT_VERSION,
+	DRIVE_OPT_FRONT,
+	DRIVE_OPT_BACK,
+	DRIVE_OPT_OUT,
+	DRIVE_OPT_READ_SYSCALL,
+	DRIVE_OPT_WRITE_SYSCALL,
+	DRIVE_OPT_SYSCALL,
+	DRIVE_OPT_CELLN,
+	DRIVE_OPT_LAST,
 };
 
 static void driver_help(Driver *drive, Opt_Info *opts, size_t opts_len, Opt_Usage *usage) {
@@ -25,14 +28,14 @@ static void driver_help(Driver *drive, Opt_Info *opts, size_t opts_len, Opt_Usag
 		size_t line_pad = 46; // TODO: Improve here
 
 		printf("\nAvailable frontends:\n");
-		for (size_t i = 0; i < DRIVER_FRONTS; ++i) {
+		for (size_t i = 0; i < DRIVE_FRONT_LAST; ++i) {
 			size_t line_curr = printf("  %-12s (sign: 0x%016lx)", drive->fronts[i].names[0], drive->fronts[i].info->sign.quad);
 			for (size_t i = line_curr; i < line_pad; ++i) putchar(' ');
 			printf("%s\n", drive->fronts[i].desc);
 		}
 
 		printf("\nAvailable backends:\n");
-		for (size_t i = 0; i < DRIVER_BACKS; ++i) {
+		for (size_t i = 0; i < DRIVE_BACK_LAST; ++i) {
 			size_t line_curr = printf("  %-12s (sign: 0x%016lx)", drive->backs[i].names[0], drive->backs[i].info->sign.quad);
 			for (size_t i = line_curr; i < line_pad; ++i) putchar(' ');
 			printf("%s\n", drive->backs[i].desc);
@@ -67,18 +70,23 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 	Opt_Result result;
 	opt_result_init(&result, matches, matches_len);
 
-	Opt_Info opts[FLAG_LAST];
-	opt_info_init(&opts[FLAG_DEBUG], "debug", "", "Enable debug output", OPT_VALUE_NONE, NULL, OPT_INFO_MATCH_FIRST);
-	opt_info_init(&opts[FLAG_VERBOSE], "verbose", "v", "Enable verbose output", OPT_VALUE_NONE, NULL, OPT_INFO_MATCH_FIRST);
-	opt_info_init(&opts[FLAG_HELP], "help", "h", "Show help information", OPT_VALUE_NONE, NULL, OPT_INFO_STOP_PARSER);
-	opt_info_init(&opts[FLAG_VERSION], "version", "", "Show version information", OPT_VALUE_NONE, NULL, OPT_INFO_STOP_PARSER);
-	opt_info_init(&opts[FLAG_FRONT], "frontend", "", "Set frontend", OPT_VALUE_STRING, NULL, OPT_INFO_MATCH_MISSING | OPT_INFO_MATCH_LAST);
-	opt_info_init(&opts[FLAG_BACK], "backend", "", "Set backend", OPT_VALUE_STRING, NULL, OPT_INFO_MATCH_MISSING | OPT_INFO_MATCH_LAST);
-	opt_info_init(&opts[FLAG_OUT], "", "o", "Set output file name", OPT_VALUE_STRING, NULL, OPT_INFO_MATCH_MISSING | OPT_INFO_MATCH_LAST);
-	opt_info_init(&opts[FLAG_CELLN], "cell", "", "Set cell number", OPT_VALUE_INT, NULL, OPT_INFO_MATCH_MISSING | OPT_INFO_STOP_DUPLICATE);
+	Opt_Info opts[DRIVE_OPT_LAST];
+	opt_info_init(&opts[DRIVE_OPT_DEBUG], "debug", "", "Enable debug output", OPT_VALUE_NONE, NULL, OPT_INFO_MATCH_FIRST);
+	opt_info_init(&opts[DRIVE_OPT_VERBOSE], "verbose", "v", "Enable verbose output", OPT_VALUE_NONE, NULL, OPT_INFO_MATCH_FIRST);
+	opt_info_init(&opts[DRIVE_OPT_HELP], "help", "h", "Show help information", OPT_VALUE_NONE, NULL, OPT_INFO_STOP_PARSER);
+	opt_info_init(&opts[DRIVE_OPT_VERSION], "version", "", "Show version information", OPT_VALUE_NONE, NULL, OPT_INFO_STOP_PARSER);
+
+	opt_info_init(&opts[DRIVE_OPT_FRONT], "frontend", "", "Set frontend", OPT_VALUE_STRING, NULL, OPT_INFO_MATCH_MISSING | OPT_INFO_MATCH_LAST);
+	opt_info_init(&opts[DRIVE_OPT_BACK], "backend", "", "Set backend", OPT_VALUE_STRING, NULL, OPT_INFO_MATCH_MISSING | OPT_INFO_MATCH_LAST);
+	opt_info_init(&opts[DRIVE_OPT_OUT], "", "o", "Set output file name", OPT_VALUE_STRING, "FILE", OPT_INFO_MATCH_MISSING | OPT_INFO_MATCH_LAST);
+
+	opt_info_init(&opts[DRIVE_OPT_READ_SYSCALL], "", "fread", "Use read syscall", OPT_VALUE_NONE, NULL, OPT_INFO_MATCH_FIRST);
+	opt_info_init(&opts[DRIVE_OPT_WRITE_SYSCALL], "", "fwrite", "Use write syscall", OPT_VALUE_NONE, NULL, OPT_INFO_MATCH_FIRST);
+	opt_info_init(&opts[DRIVE_OPT_SYSCALL], "", "fsyscall", "Use syscalls", OPT_VALUE_NONE, NULL, OPT_INFO_MATCH_FIRST);
+	opt_info_init(&opts[DRIVE_OPT_CELLN], "", "fcell", "Set cell number", OPT_VALUE_INT, NULL, OPT_INFO_STOP_DUPLICATE);
 
 	Opt_Parser parser;
-	opt_parser_init(&parser, opts, FLAG_LAST);
+	opt_parser_init(&parser, opts, DRIVE_OPT_LAST);
 
 	const char *value_kinds[] = {
 		"",
@@ -104,18 +112,18 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 
 		case OPT_ERROR_UNKNOWN_OPTION:
 			driver_error("Unknown option '%s'\n", error.unknown_opt);
-			opt_info_usage(opts, FLAG_LAST, &usage, stderr);
+			opt_info_usage(opts, DRIVE_OPT_LAST, &usage, stderr);
 			return 1;
 
 		case OPT_ERROR_DUPLICATE_OPTION:
 			driver_error("Invalid duplicate option '");
-			driver_print_opt(stderr, error.duplicate.opt, opts, FLAG_LAST);
+			driver_print_opt(stderr, error.duplicate.opt, opts, DRIVE_OPT_LAST);
 			fprintf(stderr, "'\n");
 			return 1;
 
 		case OPT_ERROR_MISSING_VALUE:
 			driver_error("Missing required %s value for option '", value_kinds[error.missing.expected_value]);
-			driver_print_opt(stderr, error.duplicate.opt, opts, FLAG_LAST);
+			driver_print_opt(stderr, error.duplicate.opt, opts, DRIVE_OPT_LAST);
 			fprintf(stderr, "'\n");
 			return 1;
 
@@ -151,30 +159,30 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 		size_t opt = missing ? matchi->missing_opt : matchi->option.opt;
 
 		switch (opt) {
-			case FLAG_DEBUG:
+			case DRIVE_OPT_DEBUG:
 				drive->debug = true;
 				drive->verbose = true;
 				break;
 
-			case FLAG_VERBOSE:
+			case DRIVE_OPT_VERBOSE:
 				drive->verbose = true;
 				break;
 
-			case FLAG_HELP:
-				driver_help(drive, opts, FLAG_LAST, &usage);
+			case DRIVE_OPT_HELP:
+				driver_help(drive, opts, DRIVE_OPT_LAST, &usage);
 				return 0;
 
-			case FLAG_VERSION:
+			case DRIVE_OPT_VERSION:
 				driver_version(drive);
 				return 0;
 
-			case FLAG_FRONT:
+			case DRIVE_OPT_FRONT:
 				if (!missing) {
 					assert(matchi->option.value.kind == OPT_VALUE_STRING);
 					if (drive->verbose) printf("Searching '%s' frontend\n", matchi->option.value.vstring);
 
 					bool found = false;
-					for (size_t i = 0; i < DRIVER_FRONTS && !found; ++i) {
+					for (size_t i = 0; i < DRIVE_FRONT_LAST && !found; ++i) {
 						size_t name = 0;
 						while (drive->fronts[i].names[name] != NULL) {
 							if (!strcasecmp(matchi->option.value.vstring, drive->fronts[i].names[name])) {
@@ -191,20 +199,20 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 					driver_error("Unknown frontend '%s'\n", matchi->option.value.vstring);
 					if (drive->verbose) {
 						fprintf(stderr, "Available frontends: ");
-						for (size_t i = 0; i < DRIVER_FRONTS - 1; ++i) fprintf(stderr, "%s, ", drive->fronts[i].names[0]);
-						fprintf(stderr, "%s\n", drive->fronts[DRIVER_FRONTS - 1].names[0]);
+						for (size_t i = 0; i < DRIVE_FRONT_LAST - 1; ++i) fprintf(stderr, "%s, ", drive->fronts[i].names[0]);
+						fprintf(stderr, "%s\n", drive->fronts[DRIVE_FRONT_LAST - 1].names[0]);
 					}
 					return 1;
 				}
 				break;
 
-			case FLAG_BACK:
+			case DRIVE_OPT_BACK:
 				if (!missing) {
 					assert(matchi->option.value.kind == OPT_VALUE_STRING);
 					if (drive->verbose) printf("Searching '%s' backend\n", matchi->option.value.vstring);
 
 					bool found = false;
-					for (size_t i = 0; i < DRIVER_BACKS && !found; ++i) {
+					for (size_t i = 0; i < DRIVE_BACK_LAST && !found; ++i) {
 						size_t name = 0;
 						while (drive->backs[i].names[name] != NULL) {
 							if (!strcasecmp(matchi->option.value.vstring, drive->backs[i].names[name])) {
@@ -221,14 +229,14 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 					driver_error("Unknown backend '%s'\n", matchi->option.value.vstring);
 					if (drive->verbose) {
 						fprintf(stderr, "Available backends: ");
-						for (size_t i = 0; i < DRIVER_BACKS - 1; ++i) fprintf(stderr, "%s, ", drive->backs[i].names[0]);
-						fprintf(stderr, "%s\n", drive->backs[DRIVER_BACKS - 1].names[0]);
+						for (size_t i = 0; i < DRIVE_BACK_LAST - 1; ++i) fprintf(stderr, "%s, ", drive->backs[i].names[0]);
+						fprintf(stderr, "%s\n", drive->backs[DRIVE_BACK_LAST - 1].names[0]);
 					}
 					return 1;
 				}
 				break;
 
-			case FLAG_OUT:
+			case DRIVE_OPT_OUT:
 				if (!missing) {
 					assert(matchi->option.value.kind == OPT_VALUE_STRING);
 					out_path = matchi->option.value.vstring;
@@ -236,12 +244,30 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 				}
 				break;
 
-			case FLAG_CELLN:
-				if (!missing) {
-					assert(matchi->option.value.kind == OPT_VALUE_INT);
-					drive->cell_n = matchi->option.value.vint;
-					if (drive->debug) printf("Set cell_n as '%zu'\n", drive->cell_n);
-				}
+			case DRIVE_OPT_READ_SYSCALL:
+				assert(!missing);
+				drive->backs[back].flag_f(drive->backs[back].aux, DRIVE_FLAG_READ_SYSCALL, matchi->option.value);
+				if (drive->debug) printf("Use read syscall\n");
+				break;
+
+			case DRIVE_OPT_WRITE_SYSCALL:
+				assert(!missing);
+				drive->backs[back].flag_f(drive->backs[back].aux, DRIVE_FLAG_WRITE_SYSCALL, matchi->option.value);
+				if (drive->debug) printf("Use write syscall\n");
+				break;
+
+			case DRIVE_OPT_SYSCALL:
+				assert(!missing);
+				drive->backs[back].flag_f(drive->backs[back].aux, DRIVE_FLAG_READ_SYSCALL, matchi->option.value);
+				drive->backs[back].flag_f(drive->backs[back].aux, DRIVE_FLAG_WRITE_SYSCALL, matchi->option.value);
+				if (drive->debug) printf("Use read and write syscalls\n");
+				break;
+
+			case DRIVE_OPT_CELLN:
+				assert(!missing);
+				assert(matchi->option.value.kind == OPT_VALUE_INT);
+				drive->cell_n = matchi->option.value.vint;
+				if (drive->debug) printf("Set cell_n as '%zu'\n", drive->cell_n);
 				break;
 
 			default:
@@ -251,7 +277,7 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 
 	if (result.simple == 0 || in_path == NULL) {
 		driver_error("No input file specified\n");
-		opt_info_usage(opts, FLAG_LAST, &usage, stderr);
+		opt_info_usage(opts, DRIVE_OPT_LAST, &usage, stderr);
 		return 1;
 	}
 
