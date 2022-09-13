@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <string.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <assert.h>
@@ -62,6 +63,11 @@ static const uint8_t amd64_mov_edx[] = { 0xba };
 // mov rax, (imm64)
 static const uint8_t amd64_mov_rax[] = { 0x48, 0xb8 };
 
+// NOTE: By default, jump and call instructions in x86_64 use relative offsets (rel32),
+// which must be encoded with the following formula
+//
+// rel_off = dest_ip - (source_ip + instr_size)
+
 // call rax
 static const uint8_t amd64_call_rax[] = { 0xff, 0xd0 };
 
@@ -108,7 +114,7 @@ static void amd64_write32(Out_Channel *out,  uint32_t dword) {
 }
 
 static void amd64_instr(Out_Channel *out, Bfir_Instr *instr, Label_Stack *stack, Amd64_Layout *mem, Amd64_Flag flags) {
-	int32_t target = 0;
+	uint32_t target = 0;
 
 	switch (instr->kind) {
 		case BFIR_ADD:
@@ -195,13 +201,13 @@ static void amd64_instr(Out_Channel *out, Bfir_Instr *instr, Label_Stack *stack,
 
 		case BFIR_JMPF:
 			out_write(out, amd64_test, sizeof(amd64_test));
-			assert(label_stack_pop(stack, (uint32_t *)&target));
+			assert(label_stack_pop(stack, &target));
 			amd64_write32(out, target);
 			break;
 
 		case BFIR_JMPB:
 			out_write(out, amd64_jmp, sizeof(amd64_jmp));
-			assert(label_stack_pop(stack, (uint32_t *)&target));
+			assert(label_stack_pop(stack, &target));
 			amd64_write32(out, target);
 			break;
 
@@ -210,9 +216,24 @@ static void amd64_instr(Out_Channel *out, Bfir_Instr *instr, Label_Stack *stack,
 	}
 }
 
-uint32_t amd64_compute(Bfir_Entry *entry, Label_Stack *stack, Amd64_Flag flags) {
+// NOTE: How jumps are computed
+//
+// Jumps are computed with the help of two stacks, one used for storing instruction pointers
+// and the other used for storing indexes in the first stack (like labels).
+//
+// When we encounter a jumpf, we push the current ip on the first stack and the first stack
+// head index to the second stack.
+//
+// Then, whenever we encounter a jmpb, we pop the last index from the second stack and compute
+// the forward and backward jump offsets. Finally, we push the backward offset to the first stack
+// and modify the forward offset by indexing in the stack with the popped index.
+//
+// Once we finish iterating over the instructions, we reverse the first stack, so that the first
+// offsets to be pushed are on the top. Also, we check that second stack is empty.
+
+uint32_t amd64_compute(Bfir_Entry *entry, Label_Stack *stack1, Label_Stack *stack2, Amd64_Flag flags) {
 	uint32_t ip = sizeof(amd64_prologue) + 8;
-	uint32_t target = 0;
+	uint32_t label = 0;
 
 	const uint32_t syscall = sizeof(amd64_mov_eax) + 4 + sizeof(amd64_mov_edi) + 4 + sizeof(amd64_mov_rsi_rbx) + sizeof(amd64_mov_edx) + 4 + sizeof(amd64_syscall);
 
@@ -249,17 +270,23 @@ uint32_t amd64_compute(Bfir_Entry *entry, Label_Stack *stack, Amd64_Flag flags) 
 				break;
 
 			case BFIR_JMPF:
+				label_stack_push(stack1, ip);
+				label_stack_push(stack2, stack1->len - 1);
 				ip += sizeof(amd64_test) + 4;
-				label_stack_push(stack, ip);
 				break;
 
 			case BFIR_JMPB:
-				assert(label_stack_pop(stack, &target));
-				int32_t tmp = (int32_t)ip - target;
-				label_stack_push(stack, *(uint32_t *)&tmp); // lf -> lb
+				label_stack_pop(stack2, &label);
+				uint32_t target = stack1->labels[label];
 				ip += sizeof(amd64_jmp) + 4;
-				tmp = (int32_t)target - ip;
-				label_stack_push(stack, *(uint32_t *)&tmp); // lb -> lf
+
+				// jmpb to jmpf
+				int32_t off = (int32_t)target - ip;
+				label_stack_push(stack1, *(uint32_t *)&off);
+
+				// jmpf to jmpb
+				off = (int32_t)ip - (target + sizeof(amd64_test) + 4);
+				stack1->labels[label] =  *(uint32_t *)&off;
 				break;
 
 			default:
@@ -270,23 +297,26 @@ uint32_t amd64_compute(Bfir_Entry *entry, Label_Stack *stack, Amd64_Flag flags) 
 		instr = bfir_entry_get(entry, instr->next);
 	}
 
+	assert(stack1->len % 2 == 0 && "Unpaired jumps");
+	assert(stack2->len == 0 && "Invalid jumps");
+	label_stack_reverse(stack1);
 	return ip + sizeof(amd64_epilogue);
 }
 
-static void amd64_entry(Out_Channel *out, Bfir_Entry *entry, Label_Stack *stack, Amd64_Layout *mem, Amd64_Flag flags) {
-	uint32_t ip = amd64_compute(entry, stack, flags);
-	label_stack_reverse(stack);
+static void amd64_entry(Out_Channel *out, Bfir_Entry *entry, Amd64_Aux *aux) {
+	uint32_t ip = amd64_compute(entry, aux->stack1, aux->stack2, aux->flags);
 
 	// For relative addressing there must be no reallocation
-	if (flags & AMD64_RELATIVE_CALL) assert(out->kind == OUT_BUFFER && "Relative addressing works only in memory");
+	// XXX: Check if the computed ip is valid
+	if (aux->flags & AMD64_RELATIVE_CALL) assert(out->kind == OUT_BUFFER && "Relative addressing works only in memory");
 	if (out->kind == OUT_BUFFER) byte_buffer_ensure(out->buffer, ip);
 
 	out_write(out, amd64_prologue, sizeof(amd64_prologue));
-	amd64_write64(out, (uint64_t)mem->cells);
+	amd64_write64(out, (uint64_t)aux->mem->cells);
 
 	Bfir_Instr *instr = bfir_entry_get(entry, entry->head);
 	while (true) {
-		amd64_instr(out, instr, stack, mem, flags);
+		amd64_instr(out, instr, aux->stack1, aux->mem, aux->flags);
 		if (instr->next == 0) break;
 		instr = bfir_entry_get(entry, instr->next);
 	}
@@ -294,13 +324,14 @@ static void amd64_entry(Out_Channel *out, Bfir_Entry *entry, Label_Stack *stack,
 	out_write(out, amd64_epilogue, sizeof(amd64_epilogue));
 }
 
-void amd64_aux_init(Amd64_Aux *aux, Label_Stack *stack, Amd64_Layout *mem, Amd64_Flag flags) {
+void amd64_aux_init(Amd64_Aux *aux, Label_Stack *stack1, Label_Stack *stack2, Amd64_Layout *mem, Amd64_Flag flags) {
 	assert(aux != NULL);
-	assert(stack != NULL);
+	assert(stack1 != NULL && stack2 != NULL);
 	assert(mem != NULL);
 
 	aux->aux.sign = amd64_back.sign;
-	aux->stack = stack;
+	aux->stack1 = stack1;
+	aux->stack2 = stack2;
 	aux->mem = mem;
 	aux->flags = flags;
 }
@@ -308,7 +339,7 @@ void amd64_aux_init(Amd64_Aux *aux, Label_Stack *stack, Amd64_Layout *mem, Amd64
 void amd64_emit(Out_Channel *out, Bfir_Entry *entry, Back_Aux *aux) {
 	assert(out != NULL && entry != NULL && aux != NULL);
 	assert(aux->sign.quad == amd64_back.sign.quad);
-	amd64_entry(out, entry, ((Amd64_Aux *)aux)->stack, ((Amd64_Aux *)aux)->mem, ((Amd64_Aux *)aux)->flags);
+	return amd64_entry(out, entry, (Amd64_Aux *)aux);
 }
 
 const Back_Info amd64_back = {

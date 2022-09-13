@@ -23,12 +23,13 @@ typedef enum {
 
 typedef struct {
 	Back_Aux aux;
-	Label_Stack *stack;
+	Label_Stack *stack1;
+	Label_Stack *stack2;
 	Amd64_Layout *mem;
 	Amd64_Flag flags;
 } Amd64_Aux;
 
-void amd64_aux_init(Amd64_Aux *aux, Label_Stack *stack, Amd64_Layout *mem, Amd64_Flag flags);
+void amd64_aux_init(Amd64_Aux *aux, Label_Stack *stack1, Label_Stack *stack2, Amd64_Layout *mem, Amd64_Flag flags);
 
 void amd64_emit(Out_Channel *out, Bfir_Entry *entry, Back_Aux *aux);
 

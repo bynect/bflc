@@ -34,11 +34,14 @@ int main(int argc, const char **argv) {
 	fclose(file);
 
 	// Init x86_64 backend
-	const size_t labels_len = 128;
+	const size_t labels_len = 256;
 	Label_Id labels[labels_len];
 
-	Label_Stack stack;
-	label_stack_init(&stack, labels, labels_len);
+	Label_Stack stack1;
+	label_stack_init(&stack1, labels, labels_len / 2);
+
+	Label_Stack stack2;
+	label_stack_init(&stack2, labels + labels_len / 2, labels_len / 2);
 
 	uint8_t cells[10000];
 	Amd64_Layout mem = {
@@ -48,7 +51,7 @@ int main(int argc, const char **argv) {
 	};
 
 	Amd64_Aux aux;
-	amd64_aux_init(&aux, &stack, &mem, AMD64_RELATIVE_CALL);
+	amd64_aux_init(&aux, &stack1, &stack2, &mem, AMD64_RELATIVE_CALL);
 
 	// Memory map buffer
 	const size_t mem_len = 4096;
