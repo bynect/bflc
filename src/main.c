@@ -83,6 +83,7 @@ int main(int argc, const char **argv) {
 			[DRIVE_BACK_AMD64_ASM] = {
 				.names = (const char *[]) { "amd64_asm", "amd64", "x86_64", NULL },
 				.desc = "X86_64 assembly backend",
+				.file_ext = "asm",
 				.info = &amd64_asm_back,
 				.aux = (void *)&amd64_asm_aux,
 				.flag_f = drive_flag_amd64_asm,
@@ -90,6 +91,7 @@ int main(int argc, const char **argv) {
 			[DRIVE_BACK_BFIR] = {
 				.names = (const char *[]) { "bfir", "ir", NULL },
 				.desc = "Brainfuck-like Intermediate Representation",
+				.file_ext = "bfir",
 				.info = &bfir_back,
 				.aux = NULL,
 				.flag_f = drive_flag_bfir,

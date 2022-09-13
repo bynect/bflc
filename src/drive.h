@@ -36,6 +36,7 @@ typedef struct {
 	struct {
 		const char **names;
 		const char *desc;
+		const char *file_ext;
 		const Back_Info *info;
 		Back_Aux *aux;
 		Driver_Flag_F *flag_f;

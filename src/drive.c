@@ -59,6 +59,28 @@ static void driver_print_opt(FILE *stream, size_t opt, Opt_Info *opts, size_t op
 	if (opts[opt].short_len != 0) fprintf(stream, "-%s", opts[opt].short_name);
 }
 
+static size_t driver_strip_ext(const char *path, char *buf, size_t buf_len) {
+	// XXX: Improve basename
+	const char *tmp = strrchr(path, '\\');
+	path = tmp == NULL ? path : (tmp + 1);
+	tmp = strrchr(path, '/');
+	path = tmp == NULL ? path : (tmp + 1);
+
+	size_t len = strlen(path);
+	const char *ptr = path + len;
+
+	while (ptr > path && *ptr != '.' && *ptr != '\\' && *ptr != '/') --ptr;
+
+	if (ptr > path && *ptr == '.' && ptr[-1] != '\\' && ptr[-1] != '/') {
+		len = ptr - path + 1;
+		buf[len] = '\0';
+	}
+
+	assert(buf_len > len);
+	memcpy(buf, path, len);
+	return len;
+}
+
 int driver_run(Driver *drive, int argc, const char **argv) {
 	const size_t matches_len = 64;
 	Opt_Match matches[matches_len];
@@ -288,8 +310,14 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 	}
 
 	if (out_path == NULL) {
-		// TODO: Calculate a name based on the input file, eg test.bf -> test.asm/test.o
-		out_path = "output";
+		char path_buf[4096];
+		size_t len = driver_strip_ext(in_path, path_buf, sizeof(path_buf));
+
+		const char *file_ext = drive->backs[back].file_ext;
+		memcpy(path_buf + len, file_ext, strlen(file_ext));
+		path_buf[len + strlen(file_ext)] = '\0';
+
+		out_path = path_buf;
 		if (drive->debug) printf("No out_path specified, falling back to '%s'\n", out_path);
 	}
 
