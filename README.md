@@ -32,8 +32,10 @@ The compiler is a terminal interface for the [blfc library](#library).
 - `--verbose` or `-v` Set verbose output
 - `--help` or `-h` Print help message
 - `--version` Print version message
-- `--front=STRING` Set one of the [available frontends](#supported-frontends). The default is `brainfuck`
-- `--back=STRING` Set one of the [available backends](#supported-backends). The default is `amd64\_asm`
+- `--frontend=STRING` Set one of the [available frontends](#supported-frontends). The default is `brainfuck`
+- `--backend=STRING` Set one of the [available backends](#supported-backends). The default is `amd64_asm`
+- `--front=STRING` Alternative name for `--frontend` option
+- `--back=STRING` Alternative name for `--backend` option
 - `-o` Set output file path. The default is `output`
 - `--cell=INT` Set the number of cell to pass to the backend
 

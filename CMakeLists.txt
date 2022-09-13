@@ -25,7 +25,6 @@ list(APPEND COMPILER_SRC ${FRONT_SRC} ${BACK_SRC})
 
 add_executable(bflc_bin ${COMPILER_SRC})
 set_target_properties(bflc_bin PROPERTIES OUTPUT_NAME bflc)
-target_compile_definitions(bflc_bin PRIVATE VERSION="${CMAKE_PROJECT_VERSION}")
 
 target_link_libraries(bflc_bin PRIVATE bflc)
 target_include_directories(bflc_bin PRIVATE .)
@@ -69,3 +68,7 @@ if(WITH_MMAP AND WITH_MUNMAP)
 	target_include_directories(jit_example PRIVATE .)
 	target_include_directories(jit_example PRIVATE ${LIBRARY_DIR})
 endif()
+
+# Global settings
+add_compile_definitions(BFLC_VERSION="${CMAKE_PROJECT_VERSION}")
+set_property(GLOBAL PROPERTY C_STANDARD 99)

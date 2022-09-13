@@ -13,6 +13,8 @@ enum {
 	DRIVE_OPT_VERSION,
 	DRIVE_OPT_FRONT,
 	DRIVE_OPT_BACK,
+	DRIVE_OPT_FRONT_ALT,
+	DRIVE_OPT_BACK_ALT,
 	DRIVE_OPT_OUT,
 	DRIVE_OPT_READ_SYSCALL,
 	DRIVE_OPT_WRITE_SYSCALL,
@@ -44,7 +46,7 @@ static void driver_help(Driver *drive, Opt_Info *opts, size_t opts_len, Opt_Usag
 }
 
 static void driver_version(Driver *drive) {
-	printf("bflc %s\n", VERSION);
+	printf("bflc %s\n", BFLC_VERSION);
 }
 
 static void driver_print_opt(FILE *stream, size_t opt, Opt_Info *opts, size_t opts_len) {
@@ -78,6 +80,8 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 
 	opt_info_init(&opts[DRIVE_OPT_FRONT], "frontend", "", "Set frontend", OPT_VALUE_STRING, NULL, OPT_INFO_MATCH_MISSING | OPT_INFO_MATCH_LAST);
 	opt_info_init(&opts[DRIVE_OPT_BACK], "backend", "", "Set backend", OPT_VALUE_STRING, NULL, OPT_INFO_MATCH_MISSING | OPT_INFO_MATCH_LAST);
+	opt_info_init(&opts[DRIVE_OPT_FRONT_ALT], "front", "", "Set frontend", OPT_VALUE_STRING, NULL, OPT_INFO_MATCH_MISSING | OPT_INFO_MATCH_LAST);
+	opt_info_init(&opts[DRIVE_OPT_BACK_ALT], "back", "", "Set backend", OPT_VALUE_STRING, NULL, OPT_INFO_MATCH_MISSING | OPT_INFO_MATCH_LAST);
 	opt_info_init(&opts[DRIVE_OPT_OUT], "", "o", "Set output file name", OPT_VALUE_STRING, "FILE", OPT_INFO_MATCH_MISSING | OPT_INFO_MATCH_LAST);
 
 	opt_info_init(&opts[DRIVE_OPT_READ_SYSCALL], "", "fread", "Use read syscall", OPT_VALUE_NONE, NULL, OPT_INFO_MATCH_FIRST);
@@ -177,6 +181,7 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 				return 0;
 
 			case DRIVE_OPT_FRONT:
+			case DRIVE_OPT_FRONT_ALT:
 				if (!missing) {
 					assert(matchi->option.value.kind == OPT_VALUE_STRING);
 					if (drive->verbose) printf("Searching '%s' frontend\n", matchi->option.value.vstring);
@@ -207,6 +212,7 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 				break;
 
 			case DRIVE_OPT_BACK:
+			case DRIVE_OPT_BACK_ALT:
 				if (!missing) {
 					assert(matchi->option.value.kind == OPT_VALUE_STRING);
 					if (drive->verbose) printf("Searching '%s' backend\n", matchi->option.value.vstring);
