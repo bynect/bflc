@@ -3,7 +3,7 @@
 ## Overview
 
 The BrainFuck-like Languages Compiler (bflc) is a compiler framework that targets
-[Brainfuck][brainfuck] and closely [related languages](family).
+[Brainfuck][brainfuck] and closely [related languages][family].
 
 ## Build
 
@@ -63,7 +63,7 @@ so you must compile them separately.
 
 ### Supported backends
 
-- [X86\_64 assembly](x64-asm) backend, uses NASM syntax ([`amd64_asm`](/back/amd64_asm.c)):
+- [X86\_64 assembly](x64-asm) backend, uses NASM syntax ([`amd64_asm`](/back/amd64_asm.c))
 - [X86\_64 machine code](x64-mach) backend, only for JIT-ing ([`amd64`](/back/amd64.c))
 
 ### Jit integration
@@ -85,8 +85,8 @@ problems with either [Asan][asan] or [Valgrind][valgrind].
 The bflc framework is licensed under the terms and conditions of the
 [Apache-2.0 License](LICENSE).
 
-[family]: https://en.wikipedia.org/wiki/Brainfuck
-[brainfuck]: https://esolangs.org/wiki/Trivial_brainfuck_substitution
+[family]: https://esolangs.org/wiki/Trivial_brainfuck_substitution
+[brainfuck]: https://en.wikipedia.org/wiki/Brainfuck
 [fuckbees]: https://esolangs.org/wiki/FuckbeEs
 [x64-asm]: https://en.wikipedia.org/wiki/X86_assembly_language
 [x64-mach]: https://www.felixcloutier.com/x86

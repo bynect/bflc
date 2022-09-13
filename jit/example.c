@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <assert.h>
 
 #include <unistd.h>
@@ -11,10 +12,24 @@
 #include "front/brainfuck.h"
 
 int main(int argc, const char **argv) {
+	bool debug = false;
+
+	// Check arguments
+	assert(argc > 1 && "Missing arguments");
+	const char *path = argv[1];
+	if (argc == 3) {
+		assert(!strcmp(argv[1], "--debug"));
+		debug = true;
+		path = argv[2];
+	}
+
+	FILE *file = stdin;
+	if (strcmp(path, "-")) {
+		file = fopen(argv[1], "rb");
+		assert(file != NULL && "Failed to open file");
+	}
+
 	// Open input file
-	assert(argc == 2);
-	FILE *file = fopen(argv[1], "rb");
-	assert(file);
 
 	In_Channel in;
 	in_init_file(&in, file);
@@ -31,7 +46,7 @@ int main(int argc, const char **argv) {
 
 	// Parse input to IR
 	brainfuck_front.parse_f(&in, &entry, NULL);
-	fclose(file);
+	if (file != stdin) fclose(file);
 
 	// Init x86_64 backend
 	const size_t labels_len = 256;
@@ -69,6 +84,12 @@ int main(int argc, const char **argv) {
 
 	// Emit x86_64 machine code
 	amd64_back.emit_f(&out, &entry, (void *)&aux);
+
+	if (debug) {
+		printf("Program compiled, %zu bytes emitted\n", buffer.len);
+		for (size_t i = 0; i < buffer.len; ++i) printf("%02x ", buffer.bytes[i]);
+		printf("\n\n");
+	}
 
 	// Execute compiled machine code
 	void (*func)() = mem_ptr;
