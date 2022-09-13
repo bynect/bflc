@@ -3,7 +3,7 @@
 
 #include "front.h"
 
-void bfir_parse(In_Channel *in, Bfir_Entry *entry, Front_Aux *aux);
+Error bfir_parse(In_Channel *in, Bfir_Entry *entry, Front_Aux *aux);
 
 extern const Front_Info bfir_front;
 

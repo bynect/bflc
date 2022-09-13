@@ -336,10 +336,14 @@ void amd64_aux_init(Amd64_Aux *aux, Label_Stack *stack1, Label_Stack *stack2, Am
 	aux->flags = flags;
 }
 
-void amd64_emit(Out_Channel *out, Bfir_Entry *entry, Back_Aux *aux) {
+Error amd64_emit(Out_Channel *out, Bfir_Entry *entry, Back_Aux *aux) {
 	assert(out != NULL && entry != NULL && aux != NULL);
 	assert(aux->sign.quad == amd64_back.sign.quad);
-	return amd64_entry(out, entry, (Amd64_Aux *)aux);
+	amd64_entry(out, entry, (Amd64_Aux *)aux);
+
+	// TODO: Implement error handling
+	Error error = { NULL };
+	return error;
 }
 
 const Back_Info amd64_back = {

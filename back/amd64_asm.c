@@ -118,10 +118,14 @@ void amd64_asm_aux_init(Amd64_Asm_Aux *aux, Label_Stack *stack, size_t celln, Am
 	aux->flags = flags;
 }
 
-void amd64_asm_emit(Out_Channel *out, Bfir_Entry *entry, Back_Aux *aux) {
+Error amd64_asm_emit(Out_Channel *out, Bfir_Entry *entry, Back_Aux *aux) {
 	assert(out != NULL && entry != NULL && aux != NULL);
 	assert(aux->sign.quad == amd64_asm_back.sign.quad);
 	amd64_asm_entry(out, entry, ((Amd64_Asm_Aux *)aux)->stack, ((Amd64_Asm_Aux *)aux)->celln, ((Amd64_Asm_Aux *)aux)->flags);
+
+	// TODO: Implement error handling
+	Error error = { NULL };
+	return error;
 }
 
 const Back_Info amd64_asm_back = {

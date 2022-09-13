@@ -3,7 +3,7 @@
 
 #include "middle.h"
 
-void valid_pass(Bfir_Entry *entry, Middle_Aux *aux);
+Error valid_pass(Bfir_Entry *entry, Middle_Aux *aux);
 
 extern const Middle_Info valid_middle;
 

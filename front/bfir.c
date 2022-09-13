@@ -4,7 +4,7 @@
 #include "front.h"
 #include "in.h"
 
-void bfir_parse(In_Channel *in, Bfir_Entry *entry, Front_Aux *aux) {
+Error bfir_parse(In_Channel *in, Bfir_Entry *entry, Front_Aux *aux) {
 	assert(aux == NULL || aux->sign.quad == bfir_front.sign.quad);
 
 	assert(false);

@@ -99,7 +99,7 @@ int main(int argc, const char **argv) {
 		},
 		.verbose = false,
 		.debug = false,
-		.validate = false,
+		.validate = true,
 		.cell_n = 30000,
 	};
 

@@ -6,12 +6,13 @@
 #include "bfir.h"
 #include "in.h"
 #include "sign.h"
+#include "error.h"
 
 typedef struct {
 	Signature sign;
 } Front_Aux;
 
-typedef void (Front_Parse_F)(In_Channel *in, Bfir_Entry *entry, Front_Aux *aux);
+typedef Error (Front_Parse_F)(In_Channel *in, Bfir_Entry *entry, Front_Aux *aux);
 
 typedef struct {
 	Signature sign;

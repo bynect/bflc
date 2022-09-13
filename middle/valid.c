@@ -2,9 +2,11 @@
 
 #include "valid.h"
 
-void valid_pass(Bfir_Entry *entry, Middle_Aux *aux) {
+Error valid_pass(Bfir_Entry *entry, Middle_Aux *aux) {
 	assert(aux == NULL || aux->sign.quad == valid_middle.sign.quad);
-	if (entry->head == 0) return;
+	//if (entry->head == 0) return;
+
+	Error error = { NULL };
 
 	uint32_t level = 0;
 
@@ -41,6 +43,7 @@ void valid_pass(Bfir_Entry *entry, Middle_Aux *aux) {
 	}
 
 	assert(level == 0 && "Unpaired jumps");
+	return error;
 }
 
 const Middle_Info valid_middle = {

@@ -31,7 +31,7 @@ typedef struct {
 
 void amd64_aux_init(Amd64_Aux *aux, Label_Stack *stack1, Label_Stack *stack2, Amd64_Layout *mem, Amd64_Flag flags);
 
-void amd64_emit(Out_Channel *out, Bfir_Entry *entry, Back_Aux *aux);
+Error amd64_emit(Out_Channel *out, Bfir_Entry *entry, Back_Aux *aux);
 
 extern const Back_Info amd64_back;
 

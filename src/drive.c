@@ -5,6 +5,7 @@
 
 #include "drive.h"
 #include "opt.h"
+#include "error.h"
 #include "middle/valid.h"
 
 enum {
@@ -358,10 +359,21 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 	Bfir_Entry entry;
 	bfir_entry_init(&entry, "main", &pool);
 
-	drive->fronts[front].info->parse_f(&in_chan, &entry, drive->fronts[front].aux);
+	Error cerror = drive->fronts[front].info->parse_f(&in_chan, &entry, drive->fronts[front].aux);
 	fclose(in_file);
 
-	if (drive->validate) valid_middle.pass_f(&entry, NULL);
+	if (cerror.msg != NULL) {
+		driver_error("%s\n", cerror.msg);
+		return 1;
+	}
+
+	if (drive->validate) {
+		cerror = valid_middle.pass_f(&entry, NULL);
+		if (cerror.msg != NULL) {
+			driver_error("%s\n", cerror.msg);
+			return 1;
+		}
+	}
 
 	FILE *out_file = fopen(out_path, "wb");
 	if (out_file == NULL) {
@@ -372,8 +384,13 @@ int driver_run(Driver *drive, int argc, const char **argv) {
 	Out_Channel out_chan;
 	out_init_file(&out_chan, out_file);
 
-	drive->backs[back].info->emit_f(&out_chan, &entry, drive->backs[back].aux);
+	cerror = drive->backs[back].info->emit_f(&out_chan, &entry, drive->backs[back].aux);
 	fclose(out_file);
+
+	if (cerror.msg != NULL) {
+		driver_error("%s\n", cerror.msg);
+		return 1;
+	}
 
 	return 0;
 }

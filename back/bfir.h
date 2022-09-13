@@ -3,7 +3,7 @@
 
 #include "back.h"
 
-void bfir_emit(Out_Channel *out, Bfir_Entry *entry, Back_Aux *aux);
+Error bfir_emit(Out_Channel *out, Bfir_Entry *entry, Back_Aux *aux);
 
 extern const Back_Info bfir_back;
 

@@ -5,7 +5,7 @@
 #include "front.h"
 #include "in.h"
 
-void brainfuck_parse(In_Channel *in, Bfir_Entry *entry, Front_Aux *aux) {
+Error brainfuck_parse(In_Channel *in, Bfir_Entry *entry, Front_Aux *aux) {
 	assert(aux == NULL || aux->sign.quad == brainfuck_front.sign.quad);
 
 	uint8_t c;
@@ -50,6 +50,9 @@ void brainfuck_parse(In_Channel *in, Bfir_Entry *entry, Front_Aux *aux) {
 		}
 		bfir_entry_append(entry, &instr);
 	}
+
+	Error error = { NULL };
+	return error;
 }
 
 const Front_Info brainfuck_front = {
