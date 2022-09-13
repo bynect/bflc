@@ -9,9 +9,14 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}")
 
 set(LIBRARY_DIR lib)
 set(COMPILER_DIR src)
-set(BACK_DIR back)
 set(FRONT_DIR front)
+set(MIDDLE_DIR middle)
+set(BACK_DIR back)
 set(OPT_DIR opt)
+
+aux_source_directory(${FRONT_DIR} FRONT_SRC)
+aux_source_directory(${MIDDLE_DIR} MIDDLE_SRC)
+aux_source_directory(${BACK_DIR} BACK_SRC)
 
 # Global settings
 add_compile_definitions(BFLC_VERSION="${CMAKE_PROJECT_VERSION}")
@@ -28,9 +33,7 @@ add_library(bflc STATIC ${LIBRARY_SRC})
 
 # Build bflc compiler (bflc)
 aux_source_directory(${COMPILER_DIR} COMPILER_SRC)
-aux_source_directory(${FRONT_DIR} FRONT_SRC)
-aux_source_directory(${BACK_DIR} BACK_SRC)
-list(APPEND COMPILER_SRC ${FRONT_SRC} ${BACK_SRC})
+list(APPEND COMPILER_SRC ${FRONT_SRC} ${MIDDLE_SRC} ${BACK_SRC})
 
 add_executable(bflc_bin ${COMPILER_SRC})
 set_target_properties(bflc_bin PROPERTIES OUTPUT_NAME bflc)
@@ -68,9 +71,7 @@ check_symbol_exists(mremap "sys/mman.h" WITH_MREMAP)
 
 if(WITH_MMAP AND WITH_MUNMAP)
 	list(APPEND EXAMPLE_SRC jit/example.c)
-	aux_source_directory(${FRONT_DIR} FRONT_SRC)
-	aux_source_directory(${BACK_DIR} BACK_SRC)
-	list(APPEND EXAMPLE_SRC ${FRONT_SRC} ${BACK_SRC})
+	list(APPEND EXAMPLE_SRC ${FRONT_SRC} ${MIDDLE_SRC} ${BACK_SRC})
 
 	add_executable(jit_example ${EXAMPLE_SRC})
 	target_link_libraries(jit_example PRIVATE bflc)

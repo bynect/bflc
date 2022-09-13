@@ -1,5 +1,5 @@
-#ifndef FRONT_H
-#define FRONT_H
+#ifndef MIDDLE_H
+#define MIDDLE_H
 
 #include <stdbool.h>
 
