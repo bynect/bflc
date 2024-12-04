@@ -17,12 +17,20 @@ int main(int argc, const char **argv) {
 	bool debug = false;
 
 	// Check arguments
-	assert(argc > 1 && "Missing arguments");
+	if (argc == 1 || argc > 3) {
+		fprintf(stderr, "Usage: %s [--debug] FILE\n", argv[0]);
+		return 1;
+	}
+
 	const char *path = argv[1];
 	if (argc == 3) {
-		assert(!strcmp(argv[1], "--debug"));
-		debug = true;
-		path = argv[2];
+		if (!strcmp(argv[1], "--debug")) {
+			debug = true;
+			path = argv[2];
+		} else {
+			fprintf(stderr, "Usage: %s [--debug] FILE\n", argv[0]);
+			return 1;
+		}
 	}
 
 	FILE *file = stdin;

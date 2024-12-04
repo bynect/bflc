@@ -9,7 +9,7 @@ The BrainFuck-like Languages Compiler (bflc) is a compiler framework that target
 
 Before building, get the source code by cloning the repository.
 ```sh
-git clone https://github.com/bynect/bflc.git
+git clone --recurse https://github.com/bynect/bflc.git
 ```
 
 Build the project using CMake.

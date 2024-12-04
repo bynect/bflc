@@ -1,0 +1,5 @@
+label:
+	ptr_inc 10
+	cell_inc 2
+	cell_write 1
+	jump label
